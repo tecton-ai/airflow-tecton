@@ -117,9 +117,11 @@ class TestTectonHook(unittest.TestCase):
     def test_cancel_job(self, m):
         adapter = m.post(f"{self.EXAMPLE_API_BASE}/{CANCEL_JOB_METHOD}", json=self.JOB_RESP_NO_ATTEMPT)
 
-        assert self.JOB_RESP_NO_ATTEMPT == self.hook.cancel_materialization_job("abc")
+        assert self.JOB_RESP_NO_ATTEMPT == self.hook.cancel_materialization_job("prod", "fv", "abc")
         assert adapter.call_count == 1
         assert adapter.last_request.json() == {
+            "workspace": "prod",
+            "feature_view": "fv",
             "job_id": "abc"
         }
 
@@ -127,9 +129,11 @@ class TestTectonHook(unittest.TestCase):
     def test_get_job(self, m):
         adapter = m.post(f"{self.EXAMPLE_API_BASE}/{GET_JOB_METHOD}", json=self.JOB_RESP_NO_ATTEMPT)
 
-        assert self.JOB_RESP_NO_ATTEMPT == self.hook.get_materialization_job("abc")
+        assert self.JOB_RESP_NO_ATTEMPT == self.hook.get_materialization_job("prod", "fv", "abc")
         assert adapter.call_count == 1
         assert adapter.last_request.json() == {
+            "workspace": "prod",
+            "feature_view": "fv",
             "job_id": "abc"
         }
 

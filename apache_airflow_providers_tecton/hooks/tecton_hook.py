@@ -150,23 +150,41 @@ class TectonHook(BaseHook):
 
     def get_materialization_job(
             self,
+            workspace: str,
+            feature_view: str,
             job_id: str
     ) -> Dict:
         """
-        Returns one
-        :param job_id:
+        Gets a job
+        :param workspace: Workspace name
+        :param feature_view: Feature View name
+        :param job_id: Job ID
         :return:
         """
         data = {
+            'workspace': workspace,
+            'feature_view': feature_view,
             'job_id': job_id
         }
         return self._make_request(self.get_conn(), f"{JOBS_API_BASE}/{GET_JOB_METHOD}", data)
 
     def cancel_materialization_job(
             self,
+            workspace: str,
+            feature_view: str,
             job_id: str
     ) -> Dict:
+        """
+        Cancels a running materialization job
+
+        :param workspace: Workspace name
+        :param feature_view: Feature View name
+        :param job_id:  Job ID
+        :return:
+        """
         data = {
+            'workspace': workspace,
+            'feature_view': feature_view,
             "job_id": job_id
         }
         return self._make_request(self.get_conn(), f"{JOBS_API_BASE}/{CANCEL_JOB_METHOD}", data, verbose=True)
@@ -177,6 +195,13 @@ class TectonHook(BaseHook):
             feature_view: Optional[str] = None,
             feature_service: Optional[str] = None
     ) -> Dict:
+        """
+
+        :param workspace: workspace name
+        :param feature_view: [optional] feature view name: mutually exclusive with feature_service
+        :param feature_service: [optional] feature service name: mutually exclusive with feature_view
+        :return:
+        """
         assert (feature_service is None) != (feature_view is None), "Exactly one of feature_view or feature_service should be set"
         data = {
             'workspace': workspace,
