@@ -1,3 +1,16 @@
+# Copyright 2022 Tecton, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import datetime
 import logging
 from typing import Sequence, Union, Optional
@@ -56,10 +69,13 @@ class TectonSensor(BaseSensorOperator):
         self.feature_service = feature_service
         self.online = online
         self.offline = offline
-        if isinstance(ready_time, str):
-            self.ready_time = datetime.datetime.fromisoformat(ready_time)
+        self.ready_time = ready_time
+
+    def _ready_time(self):
+        if isinstance(self.ready_time, str):
+            return datetime.datetime.fromisoformat(self.ready_time)
         else:
-            self.ready_time = ready_time
+            return self.ready_time
 
     def poke(self, context: Context) -> Union[bool, PokeReturnValue]:
         hook = TectonHook(self.conn_id)
@@ -74,11 +90,11 @@ class TectonSensor(BaseSensorOperator):
     def _maybe_check_readiness(self, resp, store, should_check) -> bool:
         if should_check:
             actual_time = resp[store + "_latest_ready_time"]
-            ready = actual_time and actual_time >= self.ready_time
+            ready = actual_time and actual_time >= self._ready_time()
             if ready:
                 logging.info(f"{store.capitalize()} store ready!")
             else:
-                logging.info(f"{store.capitalize()} store not ready. Expected: {self.ready_time} Actual: {actual_time}")
+                logging.info(f"{store.capitalize()} store not ready. Expected: {self._ready_time()} Actual: {actual_time}")
             return ready
         else:
             return True
