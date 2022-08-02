@@ -89,5 +89,7 @@ class TectonJobOperator(BaseOperator):
             hook = TectonHook.create(self.conn_id)
             hook.cancel_materialization_job(self.workspace, self.feature_view, self.job_id)
             logging.info(f"Successfully killed job {self.job_id}")
+        else:
+            logging.debug(f"No job started; none to kill")
 
 

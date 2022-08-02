@@ -67,11 +67,11 @@ class TectonSensor(BaseSensorOperator):
             readiness_resp = hook.get_latest_ready_time(self.workspace, feature_view=self.feature_view)
         else:
             readiness_resp = hook.get_latest_ready_time(self.workspace, feature_service=self.feature_service)
-        online_ready = self._check_readiness(readiness_resp, 'online', self.online)
-        offline_ready = self._check_readiness(readiness_resp, 'offline', self.offline)
+        online_ready = self._maybe_check_readiness(readiness_resp, 'online', self.online)
+        offline_ready = self._maybe_check_readiness(readiness_resp, 'offline', self.offline)
         return online_ready and offline_ready
 
-    def _check_readiness(self, resp, store, should_check) -> bool:
+    def _maybe_check_readiness(self, resp, store, should_check) -> bool:
         if should_check:
             actual_time = resp[store + "_latest_ready_time"]
             ready = actual_time and actual_time >= self.ready_time
