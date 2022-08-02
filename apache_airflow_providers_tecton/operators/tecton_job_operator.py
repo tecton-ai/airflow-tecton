@@ -68,7 +68,7 @@ class TectonJobOperator(BaseOperator):
             tecton_managed_retries=False
         )
         self.job_id = resp['job']['id']
-        job_result = hook.get_materialization_job(self.job_id)['job']
+        job_result = hook.get_materialization_job(self.workspace, self.feature_view, self.job_id)['job']
         while job_result['state'].upper().endswith('RUNNING'):
             if 'attempts' in job_result:
                 attempts = job_result['attempts']
@@ -77,7 +77,7 @@ class TectonJobOperator(BaseOperator):
             else:
                 logging.info(f"No attempt launched yet")
             time.sleep(60)
-            job_result = hook.get_materialization_job(self.job_id)['job']
+            job_result = hook.get_materialization_job(self.workspace, self.feature_view, self.job_id)['job']
         if job_result['state'].upper().endswith('SUCCESS'):
             return
         else:
@@ -87,7 +87,7 @@ class TectonJobOperator(BaseOperator):
         if self.job_id:
             logging.info(f"Attempting to kill job {self.job_id}")
             hook = TectonHook.create(self.conn_id)
-            hook.cancel_materialization_job(self.job_id)
+            hook.cancel_materialization_job(self.workspace, self.feature_view, self.job_id)
             logging.info(f"Successfully killed job {self.job_id}")
 
 
