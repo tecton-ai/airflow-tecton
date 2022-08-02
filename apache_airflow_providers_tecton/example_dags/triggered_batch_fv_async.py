@@ -40,7 +40,7 @@ with DAG(
         offline=True
     )
     data_ready = TectonSensor(
-        task_id="wait_for_offline",
+        task_id="wait_for_data",
         workspace=WORKSPACE,
         feature_view=FEATURE_VIEW,
         online=True,

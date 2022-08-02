@@ -40,23 +40,26 @@ class TectonHook(BaseHook):
     ):
         super().__init__()
         self.tecton_conn_id = conn_id
+        self._session = None
 
     def get_conn(self) -> requests.Session:
         # TODO: configure retries here
-        session = requests.Session()
+        if self._session is None:
+            session = requests.Session()
 
-        conn = self.get_connection(self.tecton_conn_id)
+            conn = self.get_connection(self.tecton_conn_id)
 
-        if conn.host and conn.host.startswith("http"):
-            self.base_url = conn.host
-        else:
-            host = "https://" + conn.host
-            self.base_url = host
+            if conn.host and conn.host.startswith("http"):
+                self.base_url = conn.host
+            else:
+                host = "https://" + conn.host
+                self.base_url = host
 
-        session.headers.update({"Authorization": f"Tecton-key {conn.password}"})
-        session.headers.update({"Content-type": "application/json"})
+            session.headers.update({"Authorization": f"Tecton-key {conn.password}"})
+            session.headers.update({"Content-type": "application/json"})
+            self._session = session
 
-        return session
+        return self._session
 
     def _pformat_dict(self, d):
         if sys.version_info >= (3, 8):

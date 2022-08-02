@@ -66,7 +66,7 @@ class TectonTriggerOperator(BaseOperator):
             start_time=self.start_time,
             end_time=self.end_time,
             allow_overwrite=self.allow_overwrite,
-            tecton_managed_retries=False
+            tecton_managed_retries=True
         )
         job_id = resp['job']['id']
         logging.info(f"Launched job with id {job_id}")
