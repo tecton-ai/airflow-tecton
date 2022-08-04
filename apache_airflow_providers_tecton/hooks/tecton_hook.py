@@ -145,7 +145,7 @@ class TectonHook(BaseHook):
         offline: bool,
     ):
         jobs = [
-            x["job"]
+            x
             for x in self.list_materialization_jobs(
                 workspace=workspace, feature_view=feature_view
             ).get("jobs", [])
