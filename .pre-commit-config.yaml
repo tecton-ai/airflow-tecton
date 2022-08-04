@@ -1,0 +1,57 @@
+# Copyright 2022 Tecton, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.1.0
+    hooks:
+      - id: check-ast
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: flake8
+        stages: [push]
+      - id: file-contents-sorter
+        files: .github/CODEOWNERS
+  - repo: https://github.com/hadialqattan/pycln
+    rev: v1.1.0
+    hooks:
+      - id: pycln
+  - repo: https://github.com/asottile/reorder_python_imports
+    rev: v2.4.0
+    hooks:
+      - id: reorder-python-imports
+        args:
+          [
+            "--application-directories=.:sdk:python:integration_tests:self_serve:tools",
+            "--unclassifiable-application-module=tecton",
+            "--unclassifiable-application-module=tecton_proto",
+            "--unclassifiable-application-module=tecton_spark",
+            "--unclassifiable-application-module=infrastructure",
+            "--unclassifiable-application-module=python",
+            "--py37-plus",
+          ]
+  - repo: https://github.com/ambv/black
+    rev: 22.1.0
+    hooks:
+      - id: black
+        additional_dependencies:
+          # Current version of this hook is incompatible with click 8.1.0; this pins us to 8.0.x
+          - click~=8.0.0
+  - repo: https://github.com/pycqa/pylint
+    rev: v2.13.5
+    hooks:
+      - id: pylint
+        args:
+          # Only enable selective checks for now
+          - --disable=all
+          - --enable=undefined-variable
