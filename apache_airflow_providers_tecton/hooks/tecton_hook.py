@@ -19,6 +19,7 @@ import sys
 import urllib
 from typing import Any, Dict, Union, Optional
 
+import pytz
 import requests
 from airflow.hooks.base import BaseHook
 
@@ -110,7 +111,7 @@ class TectonHook(BaseHook):
             raise Exception("unexpected type for datetime: " + str(type(dt)))
 
     def _parse_time(self, dt):
-        return datetime.datetime.strptime(dt, '%Y-%m-%dT%H:%M:%SZ')
+        return datetime.datetime.strptime(dt, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=pytz.UTC)
 
     def submit_materialization_job(
             self,
