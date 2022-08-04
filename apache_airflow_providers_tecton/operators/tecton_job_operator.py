@@ -71,7 +71,7 @@ class TectonJobOperator(BaseOperator):
 
     def execute(self, context: Context) -> Any:
         hook = TectonHook.create(self.conn_id)
-        job = hook.find_job(
+        job = hook.find_materialization_job(
             workspace=self.workspace,
             feature_view=self.feature_view,
             online=self.online,

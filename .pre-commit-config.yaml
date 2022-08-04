@@ -26,20 +26,6 @@ repos:
     rev: v1.1.0
     hooks:
       - id: pycln
-  - repo: https://github.com/asottile/reorder_python_imports
-    rev: v2.4.0
-    hooks:
-      - id: reorder-python-imports
-        args:
-          [
-            "--application-directories=.:sdk:python:integration_tests:self_serve:tools",
-            "--unclassifiable-application-module=tecton",
-            "--unclassifiable-application-module=tecton_proto",
-            "--unclassifiable-application-module=tecton_spark",
-            "--unclassifiable-application-module=infrastructure",
-            "--unclassifiable-application-module=python",
-            "--py37-plus",
-          ]
   - repo: https://github.com/ambv/black
     rev: 22.1.0
     hooks:
@@ -55,3 +41,21 @@ repos:
           # Only enable selective checks for now
           - --disable=all
           - --enable=undefined-variable
+  - repo: local
+    hooks:
+      - id: check-license
+        name: check-license
+        language: system
+        entry: python
+        args: ['license_checker.py']
+      - id: unit-tests
+        name: unit-tests
+        entry: python
+        args: [ "-m", "pytest", "tests/" ]
+        language: python
+        types: [ python ]
+        pass_filenames: false
+        additional_dependencies:
+          - pytest
+          - apache-airflow>=2.0
+          - requests-mock

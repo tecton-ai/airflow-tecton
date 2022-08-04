@@ -13,34 +13,56 @@
 # limitations under the License.
 import datetime
 import unittest
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 from airflow.utils.context import Context
 
-from apache_airflow_providers_tecton.operators.tecton_trigger_operator import TectonTriggerOperator
+from apache_airflow_providers_tecton.operators.tecton_trigger_operator import (
+    TectonTriggerOperator,
+)
 
 
 class TestTectonTriggerOperator(unittest.TestCase):
-    JOB = {
-        "job": {
-            "id": "abc"
-        }
+    JOB = {"job": {"id": "abc"}}
+    SUCCESS_JOB = {"id": "cba", "state": "success"}
 
-    }
-    @patch('apache_airflow_providers_tecton.operators.tecton_trigger_operator.TectonHook.create')
+    @patch(
+        "apache_airflow_providers_tecton.operators.tecton_trigger_operator.TectonHook.create"
+    )
     def test_execute(self, mock_create):
         mock_hook = MagicMock()
         mock_create.return_value = mock_hook
-        mock_hook.submit_materialization_job.return_value=self.JOB
+        mock_hook.submit_materialization_job.return_value = self.JOB
+        mock_hook.find_materialization_job.return_value = None
 
         operator = TectonTriggerOperator(
             task_id="abc",
-            workspace='prod',
-            feature_view='fv',
+            workspace="prod",
+            feature_view="fv",
             online=True,
             offline=True,
             start_time=datetime.datetime(2022, 7, 1),
             end_time=datetime.datetime(2022, 7, 2),
         )
-        operator.execute(Context())
+        self.assertEqual(["abc"], operator.execute(Context()))
 
+    @patch(
+        "apache_airflow_providers_tecton.operators.tecton_trigger_operator.TectonHook.create"
+    )
+    def test_execute_existing_job(self, mock_create):
+        mock_hook = MagicMock()
+        mock_create.return_value = mock_hook
+        mock_hook.submit_materialization_job.return_value = self.JOB
+        mock_hook.find_materialization_job.return_value = self.SUCCESS_JOB
+
+        operator = TectonTriggerOperator(
+            task_id="abc",
+            workspace="prod",
+            feature_view="fv",
+            online=True,
+            offline=True,
+            start_time=datetime.datetime(2022, 7, 1),
+            end_time=datetime.datetime(2022, 7, 2),
+        )
+        self.assertEqual(["cba"], operator.execute(Context()))
