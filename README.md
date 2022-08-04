@@ -15,7 +15,7 @@ limitations under the License.
 -->
 # apache-airflow-providers-tecton
 
-Contains an Apache Airflow provider to be used with Tecton. 
+Contains an Apache Airflow provider to be used with Tecton.
 
 This enables you to use Airflow to submit jobs as well as wait for materialization to complete.
 

@@ -114,18 +114,28 @@ class TectonHook(BaseHook):
 
     def _canonicalize_datetime(self, dt) -> str:
         if isinstance(dt, str):
-            return datetime.datetime.fromisoformat(dt).strftime("%Y-%m-%dT%H:%M:%SZ")
+            try:
+                return datetime.datetime.fromisoformat(dt).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                )
+            except:
+                return self._parse_time(dt).strftime("%Y-%m-%dT%H:%M:%SZ")
         elif isinstance(dt, datetime.datetime):
             return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
         else:
             raise Exception("unexpected type for datetime: " + str(type(dt)))
 
     def _parse_time(self, dt):
-        return datetime.datetime.strptime(dt, "%Y-%m-%dT%H:%M:%SZ").replace(
-            tzinfo=pytz.UTC
-        )
+        try:
+            return datetime.datetime.strptime(dt, "%Y-%m-%dT%H:%M:%SZ").replace(
+                tzinfo=pytz.UTC
+            )
+        except:
+            return datetime.datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S.%fZ").replace(
+                tzinfo=pytz.UTC
+            )
 
-    def find_job(
+    def find_materialization_job(
         self,
         workspace: str,
         feature_view: str,
@@ -134,10 +144,12 @@ class TectonHook(BaseHook):
         online: bool,
         offline: bool,
     ):
-        jobs = self.list_materialization_jobs(
-            workspace=workspace, feature_view=feature_view
-        ).get("jobs", [])
-        matching_job = None
+        jobs = [
+            x["job"]
+            for x in self.list_materialization_jobs(
+                workspace=workspace, feature_view=feature_view
+            ).get("jobs", [])
+        ]
         for job in sorted(
             jobs, reverse=True, key=lambda x: self._parse_time(x["created_at"])
         ):
@@ -149,9 +161,8 @@ class TectonHook(BaseHook):
                 and job["start_time"] == self._canonicalize_datetime(start_time)
                 and job["end_time"] == self._canonicalize_datetime(end_time)
             ):
-                matching_job = job
-                break
-        return matching_job
+                return job
+        return None
 
     def submit_materialization_job(
         self,
