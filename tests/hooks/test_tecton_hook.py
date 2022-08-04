@@ -260,7 +260,9 @@ class TestTectonHook(unittest.TestCase):
     def test_find_materialization_job(self, m):
         adapter = m.post(
             f"{self.EXAMPLE_API_BASE}/{LIST_JOB_METHOD}",
-            json=self.LIST_JOBS_RESP_MULTIPLE_JOBS,
+            json={
+                "jobs": [x["job"] for x in self.LIST_JOBS_RESP_MULTIPLE_JOBS["jobs"]]
+            },
         )
         assert (
             "abc"
