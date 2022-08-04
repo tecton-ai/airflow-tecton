@@ -13,40 +13,42 @@
 # limitations under the License.
 import datetime
 import logging
-from typing import Sequence, Union, Any, List
-
-from apache_airflow_providers_tecton.hooks.tecton_hook import TectonHook
+import pprint
+from typing import List
+from typing import Sequence
+from typing import Union
 
 from airflow.models import BaseOperator
 from airflow.utils.context import Context
+
+from apache_airflow_providers_tecton.hooks.tecton_hook import TectonHook
 
 
 class TectonTriggerOperator(BaseOperator):
     """
     An Airflow operator that kicks off a Tecton job, and does not wait
-    for its completion.
+    for its completion. If the latest job with the same params is in
+    the running or success state, this operator will do nothing.
 
     Note that this will use Tecton managed retries.
 
     Use this if you have unpredictably arriving data but want Tecton to manage retries of jobs.
     """
-    template_fields: Sequence[str] = (
-        "start_time",
-        "end_time"
-    )
+
+    template_fields: Sequence[str] = ("start_time", "end_time")
 
     def __init__(
-            self,
-            *,
-            conn_id: str = "tecton_default",
-            workspace: str,
-            feature_view: str,
-            online: bool,
-            offline: bool,
-            start_time: Union[str, datetime.datetime] = '{{ data_interval_start }}',
-            end_time: Union[str, datetime.datetime] = '{{ data_interval_end }}',
-            allow_overwrite=False,
-            **kwargs):
+        self,
+        *,
+        conn_id: str = "tecton_default",
+        workspace: str,
+        feature_view: str,
+        online: bool,
+        offline: bool,
+        start_time: Union[str, datetime.datetime] = "{{ data_interval_start }}",
+        end_time: Union[str, datetime.datetime] = "{{ data_interval_end }}",
+        **kwargs,
+    ):
         """
 
         :param conn_id: Airflow connection ID for Tecton connection
@@ -56,7 +58,6 @@ class TectonTriggerOperator(BaseOperator):
         :param end_time: End of time range for materialization job
         :param online: Whether job writes to online store
         :param offline: Whether job writes to offline store
-        :param allow_overwrite: Whether the job should be able to overwrite an existing, successful job. Note that this can cause inconsistencies if the underlying data has changed.
         :param kwargs: Airflow base kwargs passed to BaseOperator
         """
         super().__init__(**kwargs)
@@ -66,11 +67,29 @@ class TectonTriggerOperator(BaseOperator):
         self.offline = offline
         self.start_time = start_time
         self.end_time = end_time
-        self.allow_overwrite = allow_overwrite
         self.conn_id = conn_id
 
     def execute(self, context: Context) -> List[str]:
         hook = TectonHook.create(self.conn_id)
+
+        job = hook.find_job(
+            workspace=self.workspace,
+            feature_view=self.feature_view,
+            online=self.online,
+            offline=self.offline,
+            start_time=self.start_time,
+            end_time=self.end_time,
+        )
+        if job:
+            logging.info(f"Existing job found: {pprint.pformat(job)}")
+            if job["state"].lower().endswith("running") or job[
+                "state"
+            ].lower().endswith("success"):
+                logging.info(f"Job in {job['state']} state, so not triggering job")
+                return [job["id"]]
+            else:
+                logging.info(f"Job in {job['state']} state; triggering new job")
+
         resp = hook.submit_materialization_job(
             workspace=self.workspace,
             feature_view=self.feature_view,
@@ -78,9 +97,9 @@ class TectonTriggerOperator(BaseOperator):
             offline=self.offline,
             start_time=self.start_time,
             end_time=self.end_time,
-            allow_overwrite=self.allow_overwrite,
-            tecton_managed_retries=True
+            allow_overwrite=False,
+            tecton_managed_retries=True,
         )
-        job_id = resp['job']['id']
+        job_id = resp["job"]["id"]
         logging.info(f"Launched job with id {job_id}")
         return [job_id]
