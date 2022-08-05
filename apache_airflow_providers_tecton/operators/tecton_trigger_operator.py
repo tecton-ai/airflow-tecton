@@ -23,8 +23,6 @@ from airflow.utils.context import Context
 
 from apache_airflow_providers_tecton.hooks.tecton_hook import TectonHook
 
-# a
-
 
 class TectonTriggerOperator(BaseOperator):
     """

@@ -32,22 +32,22 @@ class TectonSensor(BaseSensorOperator):
     this is the latest for all FeatureViews listed). Specifying `online`
     and `offline` controls which stores to wait for materialization in.
     """
-    template_fields: Sequence[str] = (
-        'ready_time',
-    )
+
+    template_fields: Sequence[str] = ("ready_time",)
 
     def __init__(
-            self,
-            *,
-            conn_id: str = "tecton_default",
-            workspace: str,
-            feature_view: Optional[str] = None,
-            feature_service: Optional[str] = None,
-            online: bool,
-            offline: bool,
-            ready_time: Union[str, datetime.datetime] = '{{ data_interval_end }}',
-            poke_interval=300,
-            **kwargs):
+        self,
+        *,
+        conn_id: str = "tecton_default",
+        workspace: str,
+        feature_view: Optional[str] = None,
+        feature_service: Optional[str] = None,
+        online: bool,
+        offline: bool,
+        ready_time: Union[str, datetime.datetime] = "{{ data_interval_end }}",
+        poke_interval=300,
+        **kwargs,
+    ):
         """
 
         :param conn_id: Airflow connection ID for Tecton connection
@@ -60,9 +60,13 @@ class TectonSensor(BaseSensorOperator):
         :param poke_interval: How often to check Tecton
         :param kwargs: Airflow base kwargs passed to BaseOperator
         """
-        super().__init__(**kwargs, mode='reschedule', poke_interval=poke_interval)
-        assert (feature_view is None) != (feature_service is None), "Exactly one of feature_view or feature_service must be set"
-        assert online or offline, "You must wait for either the online store, offline store, or both. Waiting for neither is a no-op."
+        super().__init__(**kwargs, mode="reschedule", poke_interval=poke_interval)
+        assert (feature_view is None) != (
+            feature_service is None
+        ), "Exactly one of feature_view or feature_service must be set"
+        assert (
+            online or offline
+        ), "You must wait for either the online store, offline store, or both. Waiting for neither is a no-op."
         self.conn_id = conn_id
         self.workspace = workspace
         self.feature_view = feature_view
@@ -80,11 +84,19 @@ class TectonSensor(BaseSensorOperator):
     def poke(self, context: Context) -> Union[bool, PokeReturnValue]:
         hook = TectonHook(self.conn_id)
         if self.feature_view:
-            readiness_resp = hook.get_latest_ready_time(self.workspace, feature_view=self.feature_view)
+            readiness_resp = hook.get_latest_ready_time(
+                self.workspace, feature_view=self.feature_view
+            )
         else:
-            readiness_resp = hook.get_latest_ready_time(self.workspace, feature_service=self.feature_service)
-        online_ready = self._maybe_check_readiness(readiness_resp, 'online', self.online)
-        offline_ready = self._maybe_check_readiness(readiness_resp, 'offline', self.offline)
+            readiness_resp = hook.get_latest_ready_time(
+                self.workspace, feature_service=self.feature_service
+            )
+        online_ready = self._maybe_check_readiness(
+            readiness_resp, "online", self.online
+        )
+        offline_ready = self._maybe_check_readiness(
+            readiness_resp, "offline", self.offline
+        )
         return online_ready and offline_ready
 
     def _maybe_check_readiness(self, resp, store, should_check) -> bool:
@@ -94,8 +106,9 @@ class TectonSensor(BaseSensorOperator):
             if ready:
                 logging.info(f"{store.capitalize()} store ready!")
             else:
-                logging.info(f"{store.capitalize()} store not ready. Expected: {self._ready_time()} Actual: {actual_time}")
+                logging.info(
+                    f"{store.capitalize()} store not ready. Expected: {self._ready_time()} Actual: {actual_time}"
+                )
             return ready
         else:
             return True
-
