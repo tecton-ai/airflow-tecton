@@ -13,16 +13,14 @@
 # limitations under the License.
 def get_provider_info():
     return {
-        "package-name": "apache-airflow-providers-tecton",
+        "package-name": "airflow-tecton",
         "name": "Apache Airflow Providers Tecton",
         "description": "Apache Airflow Providers for Tecton.",
-        "hook-class-names": [
-            "apache_airflow_providers_tecton.hooks.tecton_hook.TectonHook"
-        ],
+        "hook-class-names": ["airflow_tecton.hooks.tecton_hook.TectonHook"],
         "connection-types": [
             {
                 "connection-type": "tecton",
-                "hook-class-name": "apache_airflow_providers_tecton.hooks.tecton_hook.TectonHook",
+                "hook-class-name": "airflow_tecton.hooks.tecton_hook.TectonHook",
             }
         ],
         "versions": ["0.0.1"],  # Required

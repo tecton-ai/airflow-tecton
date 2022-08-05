@@ -21,7 +21,7 @@ from typing import Union
 from airflow.models import BaseOperator
 from airflow.utils.context import Context
 
-from apache_airflow_providers_tecton.hooks.tecton_hook import TectonHook
+from airflow_tecton.hooks.tecton_hook import TectonHook
 
 
 class TectonTriggerOperator(BaseOperator):

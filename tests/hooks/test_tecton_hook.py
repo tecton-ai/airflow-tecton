@@ -19,13 +19,13 @@ import requests_mock
 from airflow.models import Connection
 from airflow.utils.session import provide_session
 
-from apache_airflow_providers_tecton.hooks.tecton_hook import CANCEL_JOB_METHOD
-from apache_airflow_providers_tecton.hooks.tecton_hook import GET_JOB_METHOD
-from apache_airflow_providers_tecton.hooks.tecton_hook import JOBS_API_BASE
-from apache_airflow_providers_tecton.hooks.tecton_hook import LIST_JOB_METHOD
-from apache_airflow_providers_tecton.hooks.tecton_hook import READINESS_METHOD
-from apache_airflow_providers_tecton.hooks.tecton_hook import SUBMIT_JOB_METHOD
-from apache_airflow_providers_tecton.hooks.tecton_hook import TectonHook
+from airflow_tecton.hooks.tecton_hook import CANCEL_JOB_METHOD
+from airflow_tecton.hooks.tecton_hook import GET_JOB_METHOD
+from airflow_tecton.hooks.tecton_hook import JOBS_API_BASE
+from airflow_tecton.hooks.tecton_hook import LIST_JOB_METHOD
+from airflow_tecton.hooks.tecton_hook import READINESS_METHOD
+from airflow_tecton.hooks.tecton_hook import SUBMIT_JOB_METHOD
+from airflow_tecton.hooks.tecton_hook import TectonHook
 
 
 class TestTectonHook(unittest.TestCase):

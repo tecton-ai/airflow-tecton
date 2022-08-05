@@ -18,7 +18,7 @@ from unittest.mock import patch
 
 from airflow.utils.context import Context
 
-from apache_airflow_providers_tecton.operators.tecton_trigger_operator import (
+from airflow_tecton.operators.tecton_trigger_operator import (
     TectonTriggerOperator,
 )
 
@@ -27,9 +27,7 @@ class TestTectonTriggerOperator(unittest.TestCase):
     JOB = {"job": {"id": "abc"}}
     SUCCESS_JOB = {"id": "cba", "state": "success"}
 
-    @patch(
-        "apache_airflow_providers_tecton.operators.tecton_trigger_operator.TectonHook.create"
-    )
+    @patch("airflow_tecton.operators.tecton_trigger_operator.TectonHook.create")
     def test_execute(self, mock_create):
         mock_hook = MagicMock()
         mock_create.return_value = mock_hook
@@ -47,9 +45,7 @@ class TestTectonTriggerOperator(unittest.TestCase):
         )
         self.assertEqual(["abc"], operator.execute(Context()))
 
-    @patch(
-        "apache_airflow_providers_tecton.operators.tecton_trigger_operator.TectonHook.create"
-    )
+    @patch("airflow_tecton.operators.tecton_trigger_operator.TectonHook.create")
     def test_execute_existing_job(self, mock_create):
         mock_hook = MagicMock()
         mock_create.return_value = mock_hook
