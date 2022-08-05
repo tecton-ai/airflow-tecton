@@ -51,10 +51,12 @@ class TectonHook(BaseHook):
 
     conn_name_attr = "tecton_conn_id"
     default_conn_name = "tecton_default"
+    conn_type = "tecton"
+    hook_name = "Tecton"
 
     def __init__(self, conn_id: str = default_conn_name):
         super().__init__()
-        self.tecton_conn_id = conn_id
+        self.conn = self.get_connection(conn_id)
         self._session = None
 
     def get_conn(self) -> requests.Session:
@@ -62,7 +64,7 @@ class TectonHook(BaseHook):
         if self._session is None:
             session = requests.Session()
 
-            conn = self.get_connection(self.tecton_conn_id)
+            conn = self.conn
 
             if conn.host and conn.host.startswith("http"):
                 self.base_url = conn.host
@@ -291,3 +293,17 @@ class TectonHook(BaseHook):
     @classmethod
     def create(cls, conn_id: str):
         return cls(conn_id)
+
+    @classmethod
+    def get_ui_field_behaviour(cls) -> Dict[str, Any]:
+        """Returns custom field behaviour"""
+        return {
+            "hidden_fields": ["port", "schema", "login", "extra"],
+            "placeholders": {
+                "password": "Output of `tecton api-key create`",
+                "host": "https://example.tecton.ai",
+            },
+            "relabeling": {
+                "password": "API Key",
+            },
+        }
