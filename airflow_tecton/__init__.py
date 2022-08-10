@@ -25,3 +25,8 @@ def get_provider_info():
         ],
         "versions": ["0.0.1"],  # Required
     }
+
+
+from airflow_tecton.operators.tecton_job_operator import TectonJobOperator
+from airflow_tecton.operators.tecton_trigger_operator import TectonTriggerOperator
+from airflow_tecton.sensors.tecton_sensor import TectonSensor
