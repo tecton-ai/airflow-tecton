@@ -41,7 +41,50 @@ You can add a new connection by going to `Connections` under the `Admin` tab in 
 
 # Usage
 
-This package contains Airflow operators to submit and monitor materialization.
+## Configuring a Feature View for manual triggering
+
+A `BatchFeatureView` and a `StreamFeatureView` can be configured for manual triggering. To do so, set `batch_trigger=BatchTriggerType.MANUAL`. When set to manual, Tecton will not automatically create any batch materialization jobs for the Feature View.
+
+For a `StreamFeatureView`, only batch materialization job scheduling will be impacted by the `batch_trigger` setting. Streaming materialization job scheduling will still be managed by Tecton.
+
+Here’s an example of a `BatchFeatureView` configured for manual triggering.
+
+```python
+from tecton import batch_feature_view, FilteredSource, Aggregation, BatchTriggerType
+from fraud.entities import user
+from fraud.data_sources.transactions import transactions_batch
+from datetime import datetime, timedelta
+
+@batch_feature_view(
+    sources=[FilteredSource(transactions_batch)],
+    entities=[user],
+    mode='spark_sql',
+    aggregation_interval=timedelta(days=1),
+    aggregations=[
+        Aggregation(column='transaction', function='count', time_window=timedelta(days=1)),
+        Aggregation(column='transaction', function='count', time_window=timedelta(days=30)),
+        Aggregation(column='transaction', function='count', time_window=timedelta(days=90))
+    ],
+    online=False,
+    offline=True,
+    feature_start_time=datetime(2022, 5, 1),
+    tags={'release': 'production'},
+    owner='matt@tecton.ai',
+    description='User transaction totals over a series of time windows, updated daily.',
+    batch_trigger=BatchTriggerType.MANUAL # Use manual triggers
+)
+def user_transaction_counts(transactions):
+    return f'''
+        SELECT
+            user_id,
+            1 as transaction,
+            timestamp
+        FROM
+            {transactions}
+        '''
+```
+
+If a Data Source input to the Feature View has `data_delay` set, then that delay will still be factored in to constructing training data sets but does not impact when the job can be triggered with the materialization API.
 
 ## Materialization Job Submission
 
@@ -80,9 +123,6 @@ TectonTriggerOperator(
     offline=True,
 )
 ```
-
-### Compatibility with Feature Views
-Note that these functions require you have your Feature View configured with `batch_trigger=BatchTriggerType.TRIGGERED`. Currently, conversion of Feature Views with scheduled materialization is not supported.
 
 ## Waiting For Materialization
 
