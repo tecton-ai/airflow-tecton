@@ -23,6 +23,12 @@ Two basic capabilities are supported:
 
 Note this package is in preview and it will not work with your Tecton installation unless enabled.
 
+## Changelog
+
+- 0.0.2 Removed type annotations that caused compatibility issues with Airflow versions below 2.4.
+
+- 0.0.1 Initial release
+
 # Installation and Configuration
 
 ## Installation
