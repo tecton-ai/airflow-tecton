@@ -15,8 +15,6 @@ import datetime
 import unittest
 from unittest.mock import patch, MagicMock, Mock
 
-from airflow.utils.context import Context
-
 from airflow_tecton.operators.tecton_trigger_operator import TectonTriggerOperator
 from airflow_tecton.sensors.tecton_sensor import TectonSensor
 
@@ -42,23 +40,23 @@ class TestTectonSensor(unittest.TestCase):
             ready_time=datetime.datetime(2022, 1, 31),
         )
         mock_hook.get_latest_ready_time.return_value = self._make_resp(None, None)
-        assert not sensor.poke(Context())
+        assert not sensor.poke(None)
         mock_hook.get_latest_ready_time.return_value = self._make_resp(
             None, datetime.datetime(2022, 1, 31)
         )
-        assert not sensor.poke(Context())
+        assert not sensor.poke(None)
         mock_hook.get_latest_ready_time.return_value = self._make_resp(
             datetime.datetime(2022, 1, 31), datetime.datetime(2022, 1, 31)
         )
-        assert sensor.poke(Context())
+        assert sensor.poke(None)
         mock_hook.get_latest_ready_time.return_value = self._make_resp(
             datetime.datetime(2022, 1, 30), datetime.datetime(2022, 1, 30)
         )
-        assert not sensor.poke(Context())
+        assert not sensor.poke(None)
         mock_hook.get_latest_ready_time.return_value = self._make_resp(
             datetime.datetime(2022, 1, 30), datetime.datetime(2022, 1, 31)
         )
-        assert not sensor.poke(Context())
+        assert not sensor.poke(None)
 
         sensor = TectonSensor(
             task_id="abc",
@@ -69,19 +67,19 @@ class TestTectonSensor(unittest.TestCase):
             ready_time=datetime.datetime(2022, 1, 31),
         )
         mock_hook.get_latest_ready_time.return_value = self._make_resp(None, None)
-        assert not sensor.poke(Context())
+        assert not sensor.poke(None)
         mock_hook.get_latest_ready_time.return_value = self._make_resp(
             datetime.datetime(2022, 1, 30), None
         )
-        assert not sensor.poke(Context())
+        assert not sensor.poke(None)
         mock_hook.get_latest_ready_time.return_value = self._make_resp(
             datetime.datetime(2022, 1, 31), None
         )
-        assert sensor.poke(Context())
+        assert sensor.poke(None)
         mock_hook.get_latest_ready_time.return_value = self._make_resp(
             datetime.datetime(2022, 1, 31), datetime.datetime(2022, 1, 30)
         )
-        assert sensor.poke(Context())
+        assert sensor.poke(None)
         sensor = TectonSensor(
             task_id="abc",
             workspace="prod",
@@ -91,17 +89,17 @@ class TestTectonSensor(unittest.TestCase):
             ready_time=datetime.datetime(2022, 1, 31),
         )
         mock_hook.get_latest_ready_time.return_value = self._make_resp(None, None)
-        assert not sensor.poke(Context())
+        assert not sensor.poke(None)
         mock_hook.get_latest_ready_time.return_value = self._make_resp(
             None,
             datetime.datetime(2022, 1, 30),
         )
-        assert not sensor.poke(Context())
+        assert not sensor.poke(None)
         mock_hook.get_latest_ready_time.return_value = self._make_resp(
             None,
             datetime.datetime(2022, 1, 31),
         )
-        assert sensor.poke(Context())
+        assert sensor.poke(None)
         mock_hook.get_latest_ready_time.return_value = self._make_resp(
             datetime.datetime(2022, 1, 30),
             datetime.datetime(2022, 1, 31),

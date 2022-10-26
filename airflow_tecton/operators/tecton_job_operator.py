@@ -20,7 +20,6 @@ from typing import Sequence
 from typing import Union
 
 from airflow.models import BaseOperator
-from airflow.utils.context import Context
 
 from airflow_tecton.hooks.tecton_hook import TectonHook
 
@@ -69,7 +68,7 @@ class TectonJobOperator(BaseOperator):
         self.conn_id = conn_id
         self.job_id = None
 
-    def execute(self, context: Context) -> Any:
+    def execute(self, context) -> Any:
         hook = TectonHook.create(self.conn_id)
         job = hook.find_materialization_job(
             workspace=self.workspace,
