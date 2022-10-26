@@ -15,8 +15,6 @@ import datetime
 import unittest
 from unittest.mock import patch, MagicMock, Mock
 
-from airflow.utils.context import Context
-
 from airflow_tecton.operators.tecton_job_operator import (
     TectonJobOperator,
 )
@@ -72,7 +70,7 @@ class TestTectonJobOperator(unittest.TestCase):
             start_time=datetime.datetime(2022, 7, 1),
             end_time=datetime.datetime(2022, 7, 2),
         )
-        operator.execute(Context())
+        operator.execute(None)
 
     @patch("time.sleep", return_value=None)
     @patch("airflow_tecton.operators.tecton_job_operator.TectonHook.create")
@@ -99,7 +97,7 @@ class TestTectonJobOperator(unittest.TestCase):
             start_time=datetime.datetime(2022, 7, 1),
             end_time=datetime.datetime(2022, 7, 2),
         )
-        operator.execute(Context())
+        operator.execute(None)
         assert mock_hook.cancel_materialization_job.call_count == 1
 
     @patch("time.sleep", return_value=None)
@@ -125,7 +123,7 @@ class TestTectonJobOperator(unittest.TestCase):
             end_time=datetime.datetime(2022, 7, 2),
         )
         with self.assertRaises(Exception) as e:
-            operator.execute(Context())
+            operator.execute(None)
         self.assertIn("Final job state", str(e.exception))
 
     @patch("time.sleep", return_value=None)
@@ -151,7 +149,7 @@ class TestTectonJobOperator(unittest.TestCase):
             end_time=datetime.datetime(2022, 7, 2),
         )
         with self.assertRaises(Exception) as e:
-            operator.execute(Context())
+            operator.execute(None)
         self.assertIn("Final job state", str(e.exception))
 
     @patch("airflow_tecton.operators.tecton_job_operator.TectonHook.create")

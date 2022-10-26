@@ -16,8 +16,6 @@ import unittest
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-from airflow.utils.context import Context
-
 from airflow_tecton.operators.tecton_trigger_operator import (
     TectonTriggerOperator,
 )
@@ -43,7 +41,7 @@ class TestTectonTriggerOperator(unittest.TestCase):
             start_time=datetime.datetime(2022, 7, 1),
             end_time=datetime.datetime(2022, 7, 2),
         )
-        self.assertEqual(["abc"], operator.execute(Context()))
+        self.assertEqual(["abc"], operator.execute(None))
 
     @patch("airflow_tecton.operators.tecton_trigger_operator.TectonHook.create")
     def test_execute_existing_job(self, mock_create):
@@ -61,4 +59,4 @@ class TestTectonTriggerOperator(unittest.TestCase):
             start_time=datetime.datetime(2022, 7, 1),
             end_time=datetime.datetime(2022, 7, 2),
         )
-        self.assertEqual(["cba"], operator.execute(Context()))
+        self.assertEqual(["cba"], operator.execute(None))

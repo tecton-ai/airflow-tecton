@@ -19,7 +19,6 @@ from typing import Sequence
 from typing import Union
 
 from airflow.models import BaseOperator
-from airflow.utils.context import Context
 
 from airflow_tecton.hooks.tecton_hook import TectonHook
 
@@ -69,7 +68,7 @@ class TectonTriggerOperator(BaseOperator):
         self.end_time = end_time
         self.conn_id = conn_id
 
-    def execute(self, context: Context) -> List[str]:
+    def execute(self, context) -> List[str]:
         hook = TectonHook.create(self.conn_id)
 
         job = hook.find_materialization_job(

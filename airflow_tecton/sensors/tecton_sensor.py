@@ -15,8 +15,7 @@ import datetime
 import logging
 from typing import Sequence, Union, Optional
 
-from airflow.sensors.base import BaseSensorOperator, PokeReturnValue
-from airflow.utils.context import Context
+from airflow.sensors.base import BaseSensorOperator
 
 from airflow_tecton.hooks.tecton_hook import TectonHook
 
@@ -81,7 +80,7 @@ class TectonSensor(BaseSensorOperator):
         else:
             return self.ready_time
 
-    def poke(self, context: Context) -> Union[bool, PokeReturnValue]:
+    def poke(self, context) -> bool:
         hook = TectonHook(self.conn_id)
         if self.feature_view:
             readiness_resp = hook.get_latest_ready_time(
