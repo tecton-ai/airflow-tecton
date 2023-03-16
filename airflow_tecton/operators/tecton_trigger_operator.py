@@ -46,6 +46,7 @@ class TectonTriggerOperator(BaseOperator):
         offline: bool,
         start_time: Union[str, datetime.datetime] = "{{ data_interval_start }}",
         end_time: Union[str, datetime.datetime] = "{{ data_interval_end }}",
+        allow_overwrite: bool = False,
         **kwargs,
     ):
         """
@@ -57,6 +58,7 @@ class TectonTriggerOperator(BaseOperator):
         :param end_time: End of time range for materialization job
         :param online: Whether job writes to online store
         :param offline: Whether job writes to offline store
+        :param allow_overwrite: Whether jobs are able to run materialization for periods that previously have materialized data. Note that this can cause inconsistencies if the underlying data has changed.
         :param kwargs: Airflow base kwargs passed to BaseOperator
         """
         super().__init__(**kwargs)
@@ -66,6 +68,7 @@ class TectonTriggerOperator(BaseOperator):
         self.offline = offline
         self.start_time = start_time
         self.end_time = end_time
+        self.allow_overwrite = allow_overwrite
         self.conn_id = conn_id
 
     def execute(self, context) -> List[str]:
@@ -81,11 +84,19 @@ class TectonTriggerOperator(BaseOperator):
         )
         if job:
             logging.info(f"Existing job found: {pprint.pformat(job)}")
-            if job["state"].lower().endswith("running") or job[
-                "state"
-            ].lower().endswith("success"):
-                logging.info(f"Job in {job['state']} state, so not triggering job")
+            if job["state"].lower().endswith("running"):
+                logging.info(f"Job already in running state; not triggering new job")
                 return [job["id"]]
+            elif job["state"].lower().endswith("success"):
+                if self.allow_overwrite:
+                    logging.info(
+                        "Overwriting existing job in success state; (allow_overwrite=True)"
+                    )
+                else:
+                    logging.info(
+                        f"Job already in success state; not triggering new job"
+                    )
+                    return [job["id"]]
             else:
                 logging.info(f"Job in {job['state']} state; triggering new job")
 
@@ -96,7 +107,7 @@ class TectonTriggerOperator(BaseOperator):
             offline=self.offline,
             start_time=self.start_time,
             end_time=self.end_time,
-            allow_overwrite=False,
+            allow_overwrite=self.allow_overwrite,
             tecton_managed_retries=True,
         )
         job_id = resp["job"]["id"]
