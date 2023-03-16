@@ -22,6 +22,7 @@ from airflow_tecton.operators.tecton_job_operator import (
 
 class TestTectonJobOperator(unittest.TestCase):
     JOB = {"job": {"id": "abc"}}
+    OTHER_JOB = {"job": {"id": "cba"}}
     OTHER_JOB_TO_CANCEL = {"id": "cba", "state": "running"}
     OTHER_JOB_TO_CANCEL_CANCELLED = {"id": "cba", "state": "manually_cancelled"}
     GET_JOB_RUNNING_NO_ATTEMPT = {"job": {"id": "abc", "state": "RUNNING"}}
@@ -32,9 +33,15 @@ class TestTectonJobOperator(unittest.TestCase):
             "attempts": [{"state": "RUNNING", "run_url": "example.com"}],
         }
     }
-    GET_JOB_SUCCESS = {
+    FIND_JOB_SUCCESS = {
+        "id": "abc",
+        "state": "SUCCESS",
+        "attempts": [{"state": "SUCCESS", "run_url": "example.com"}],
+    }
+    GET_JOB_SUCCESS = {"job": FIND_JOB_SUCCESS}
+    GET_OTHER_JOB_SUCCESS = {
         "job": {
-            "id": "abc",
+            "id": "cba",
             "state": "SUCCESS",
             "attempts": [{"state": "SUCCESS", "run_url": "example.com"}],
         }
@@ -99,6 +106,47 @@ class TestTectonJobOperator(unittest.TestCase):
         )
         operator.execute(None)
         assert mock_hook.cancel_materialization_job.call_count == 1
+
+    @patch("airflow_tecton.operators.tecton_job_operator.TectonHook.create")
+    def test_execute_existing_success(self, mock_create):
+        mock_hook = MagicMock()
+        mock_create.return_value = mock_hook
+        mock_hook.find_materialization_job.return_value = self.FIND_JOB_SUCCESS
+
+        operator = TectonJobOperator(
+            task_id="cba",
+            workspace="prod",
+            feature_view="fv",
+            online=True,
+            offline=True,
+            start_time=datetime.datetime(2022, 7, 1),
+            end_time=datetime.datetime(2022, 7, 2),
+        )
+        operator.execute(None)
+        assert mock_hook.submit_materialization_job.call_count == 0
+
+    @patch("airflow_tecton.operators.tecton_job_operator.TectonHook.create")
+    def test_execute_existing_success_allow_overwrite(self, mock_create):
+        mock_hook = MagicMock()
+        mock_create.return_value = mock_hook
+        mock_hook.find_materialization_job.return_value = self.FIND_JOB_SUCCESS
+        mock_hook.submit_materialization_job.return_value = self.OTHER_JOB
+        mock_hook.get_materialization_job.side_effect = [
+            self.GET_OTHER_JOB_SUCCESS,
+        ]
+
+        operator = TectonJobOperator(
+            task_id="cba",
+            workspace="prod",
+            feature_view="fv",
+            online=True,
+            offline=True,
+            start_time=datetime.datetime(2022, 7, 1),
+            end_time=datetime.datetime(2022, 7, 2),
+            allow_overwrite=True,
+        )
+        operator.execute(None)
+        assert mock_hook.submit_materialization_job.call_count == 1
 
     @patch("time.sleep", return_value=None)
     @patch("airflow_tecton.operators.tecton_job_operator.TectonHook.create")

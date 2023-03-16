@@ -47,7 +47,6 @@ class TestTectonTriggerOperator(unittest.TestCase):
     def test_execute_existing_job(self, mock_create):
         mock_hook = MagicMock()
         mock_create.return_value = mock_hook
-        mock_hook.submit_materialization_job.return_value = self.JOB
         mock_hook.find_materialization_job.return_value = self.SUCCESS_JOB
 
         operator = TectonTriggerOperator(
@@ -60,3 +59,24 @@ class TestTectonTriggerOperator(unittest.TestCase):
             end_time=datetime.datetime(2022, 7, 2),
         )
         self.assertEqual(["cba"], operator.execute(None))
+        assert mock_hook.submit_materialization_job.call_count == 0
+
+    @patch("airflow_tecton.operators.tecton_trigger_operator.TectonHook.create")
+    def test_execute_existing_job_with_overwrite(self, mock_create):
+        mock_hook = MagicMock()
+        mock_create.return_value = mock_hook
+        mock_hook.submit_materialization_job.return_value = self.JOB
+        mock_hook.find_materialization_job.return_value = self.SUCCESS_JOB
+
+        operator = TectonTriggerOperator(
+            task_id="abc",
+            workspace="prod",
+            feature_view="fv",
+            online=True,
+            offline=True,
+            start_time=datetime.datetime(2022, 7, 1),
+            end_time=datetime.datetime(2022, 7, 2),
+            allow_overwrite=True,
+        )
+        self.assertEqual(["abc"], operator.execute(None))
+        assert mock_hook.submit_materialization_job.call_count == 1
