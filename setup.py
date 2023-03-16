@@ -19,7 +19,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="airflow-tecton",
-    version="0.0.2",
+    version="0.0.3",
     description="Provider for using Tecton with Airflow.",
     long_description=long_description,
     long_description_content_type="text/markdown",
