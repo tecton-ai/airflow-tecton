@@ -13,7 +13,9 @@
 # limitations under the License.
 import datetime
 import logging
+import pandas
 import pprint
+from typing import Callable
 from typing import List
 from typing import Sequence
 from typing import Union
@@ -21,6 +23,7 @@ from typing import Union
 from airflow.models import BaseOperator
 
 from airflow_tecton.hooks.tecton_hook import TectonHook
+from airflow_tecton.operators.df_utils import upload_df_pandas
 
 
 class TectonTriggerOperator(BaseOperator):
@@ -47,6 +50,7 @@ class TectonTriggerOperator(BaseOperator):
         start_time: Union[str, datetime.datetime] = "{{ data_interval_start }}",
         end_time: Union[str, datetime.datetime] = "{{ data_interval_end }}",
         allow_overwrite: bool = False,
+        df_generator: Callable[[], pandas.DataFrame] = None,
         **kwargs,
     ):
         """
@@ -70,9 +74,14 @@ class TectonTriggerOperator(BaseOperator):
         self.end_time = end_time
         self.allow_overwrite = allow_overwrite
         self.conn_id = conn_id
+        self.df_generator = df_generator
 
     def execute(self, context) -> List[str]:
         hook = TectonHook.create(self.conn_id)
+
+        if self.df_generator:
+            self.ingest_feature_table_with_pandas_df(hook)
+            return
 
         job = hook.find_materialization_job(
             workspace=self.workspace,
@@ -113,3 +122,15 @@ class TectonTriggerOperator(BaseOperator):
         job_id = resp["job"]["id"]
         logging.info(f"Launched job with id {job_id}")
         return [job_id]
+
+    def ingest_feature_table_with_pandas_df(self, hook):
+        df_info = hook.get_dataframe_info(self.feature_view, self.workspace)
+
+        df_path = df_info["df_path"]
+        upload_url = df_info["signed_url_for_df_upload"]
+
+        df = self.df_generator()
+        upload_df_pandas(upload_url, df)
+
+        hook.ingest_dataframe(self.feature_view, df_path, self.workspace)
+

@@ -32,6 +32,8 @@ GET_JOB_METHOD = "get-materialization-job"
 CANCEL_JOB_METHOD = "cancel-materialization-job"
 LIST_JOB_METHOD = "list-materialization-jobs"
 READINESS_METHOD = "get-latest-ready-time"
+INGEST_DATAFRAME = "ingest-dataframe"
+GET_DATAFRAME_INFO = "get-dataframe-info"
 
 
 class TectonHook(BaseHook):
@@ -289,6 +291,37 @@ class TectonHook(BaseHook):
             result[offline_key] = self._parse_time(result[offline_key])
 
         return result
+
+    def get_dataframe_info(
+        self, feature_view: str, df_path: str, workspace: str
+    ):
+        """
+        Get ingest data frame information
+
+        :param feature_view: feature view name
+        :param workspace:  workspace name
+        :return:
+        """
+        data = {"feature_view": feature_view, "workspace": workspace}
+        self._make_request(
+            self.get_conn(), f"{JOBS_API_BASE}/{GET_DATAFRAME_INFO}", data, verbose=True
+        )
+
+    def ingest_dataframe(
+        self, feature_view: str, df_path: str, workspace: str
+    ):
+        """
+        Ingest data frame to FeatureTable from s3 path
+
+        :param feature_view: feature view name
+        :param df_path: s3 path containing pandas dataframe data
+        :param workspace:  workspace name
+        :return:
+        """
+        data = {"feature_view": feature_view, "df_path": df_path, "workspace": workspace}
+        self._make_request(
+            self.get_conn(), f"{JOBS_API_BASE}/{INGEST_DATAFRAME}", data, verbose=True
+        )
 
     @classmethod
     def create(cls, conn_id: str):

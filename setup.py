@@ -35,7 +35,7 @@ setup(
         "airflow_tecton.sensors",
         "airflow_tecton.operators",
     ],
-    install_requires=["apache-airflow>=2.0", "requests"],
+    install_requires=["apache-airflow>=2.0", "requests", "pandas==1.3.5"],
     setup_requires=["setuptools", "wheel"],
     test_require=["requests_mock"],
     url="http://tecton.ai/",
