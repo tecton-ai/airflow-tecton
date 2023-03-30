@@ -51,7 +51,7 @@ You can add a new connection by going to `Connections` under the `Admin` tab in 
 
 ## Configuring a Feature View for manual triggering
 
-A `BatchFeatureView` and a `StreamFeatureView` can be configured for manual triggering. To do so, set `batch_trigger=BatchTriggerType.MANUAL`. When set to manual, Tecton will not automatically create any batch materialization jobs for the Feature View.
+A `BatchFeatureView` and a `StreamFeatureView` can be configured for manual triggering only. To do so, set `batch_trigger=BatchTriggerType.MANUAL`. When set to manual, Tecton will not automatically create any batch materialization jobs for the Feature View. As of Tecton 0.6, any FeatureView can be manually triggered, but this is recommended mostly for manual usage.
 
 For a `StreamFeatureView`, only batch materialization job scheduling will be impacted by the `batch_trigger` setting. Streaming materialization job scheduling will still be managed by Tecton.
 
