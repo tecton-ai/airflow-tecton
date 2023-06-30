@@ -74,13 +74,10 @@ class TectonJobOperator(BaseOperator):
         self.allow_overwrite = allow_overwrite
         self.conn_id = conn_id
         self.job_id = None
+        self.df_generator = df_generator
 
     def execute(self, context) -> Any:
         hook = TectonHook.create(self.conn_id)
-
-        if self.df_generator:
-            self.ingest_feature_table_with_pandas_df(hook)
-            return
 
         job = hook.find_materialization_job(
             workspace=self.workspace,
@@ -89,6 +86,7 @@ class TectonJobOperator(BaseOperator):
             offline=self.offline,
             start_time=self.start_time,
             end_time=self.end_time,
+            job_type="ingest" if self.df_generator else "batch",
         )
         if job:
             logging.info(f"Existing job found: {pprint.pformat(job)}")
@@ -119,16 +117,19 @@ class TectonJobOperator(BaseOperator):
                     logging.info("Existing job in success state; exiting")
                     return
 
-        resp = hook.submit_materialization_job(
-            workspace=self.workspace,
-            feature_view=self.feature_view,
-            online=self.online,
-            offline=self.offline,
-            start_time=self.start_time,
-            end_time=self.end_time,
-            allow_overwrite=self.allow_overwrite,
-            tecton_managed_retries=False,
-        )
+        if self.df_generator:
+            resp = self.ingest_feature_table_with_pandas_df(hook)
+        else:
+            resp = hook.submit_materialization_job(
+                workspace=self.workspace,
+                feature_view=self.feature_view,
+                online=self.online,
+                offline=self.offline,
+                start_time=self.start_time,
+                end_time=self.end_time,
+                allow_overwrite=self.allow_overwrite,
+                tecton_managed_retries=False,
+            )
         self.job_id = resp["job"]["id"]
         job_result = hook.get_materialization_job(
             self.workspace, self.feature_view, self.job_id
@@ -162,7 +163,7 @@ class TectonJobOperator(BaseOperator):
         df = self.df_generator()
         upload_df_pandas(upload_url, df)
 
-        hook.ingest_dataframe(self.feature_view, df_path, self.workspace)
+        return hook.ingest_dataframe(self.feature_view, df_path, self.workspace)
 
     def on_kill(self) -> None:
         if self.job_id:

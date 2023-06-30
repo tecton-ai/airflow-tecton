@@ -79,10 +79,6 @@ class TectonTriggerOperator(BaseOperator):
     def execute(self, context) -> List[str]:
         hook = TectonHook.create(self.conn_id)
 
-        if self.df_generator:
-            self.ingest_feature_table_with_pandas_df(hook)
-            return
-
         job = hook.find_materialization_job(
             workspace=self.workspace,
             feature_view=self.feature_view,
@@ -90,6 +86,7 @@ class TectonTriggerOperator(BaseOperator):
             offline=self.offline,
             start_time=self.start_time,
             end_time=self.end_time,
+            job_type="ingest" if self.df_generator else "batch",
         )
         if job:
             logging.info(f"Existing job found: {pprint.pformat(job)}")
@@ -109,16 +106,19 @@ class TectonTriggerOperator(BaseOperator):
             else:
                 logging.info(f"Job in {job['state']} state; triggering new job")
 
-        resp = hook.submit_materialization_job(
-            workspace=self.workspace,
-            feature_view=self.feature_view,
-            online=self.online,
-            offline=self.offline,
-            start_time=self.start_time,
-            end_time=self.end_time,
-            allow_overwrite=self.allow_overwrite,
-            tecton_managed_retries=True,
-        )
+        if self.df_generator:
+            resp = self.ingest_feature_table_with_pandas_df(hook)
+        else:
+            resp = hook.submit_materialization_job(
+                workspace=self.workspace,
+                feature_view=self.feature_view,
+                online=self.online,
+                offline=self.offline,
+                start_time=self.start_time,
+                end_time=self.end_time,
+                allow_overwrite=self.allow_overwrite,
+                tecton_managed_retries=True,
+            )
         job_id = resp["job"]["id"]
         logging.info(f"Launched job with id {job_id}")
         return [job_id]
@@ -132,5 +132,5 @@ class TectonTriggerOperator(BaseOperator):
         df = self.df_generator()
         upload_df_pandas(upload_url, df)
 
-        hook.ingest_dataframe(self.feature_view, df_path, self.workspace)
+        return hook.ingest_dataframe(self.feature_view, df_path, self.workspace)
 

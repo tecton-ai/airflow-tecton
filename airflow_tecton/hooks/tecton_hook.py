@@ -147,6 +147,7 @@ class TectonHook(BaseHook):
         end_time: Union[datetime.datetime, str],
         online: bool,
         offline: bool,
+        job_type: str ='batch',
     ):
         jobs = [
             x
@@ -157,15 +158,16 @@ class TectonHook(BaseHook):
         for job in sorted(
             jobs, reverse=True, key=lambda x: self._parse_time(x["created_at"])
         ):
-            if job["job_type"].lower() != "batch":
-                continue
-            if (
-                job["online"] == online
-                and job["offline"] == offline
-                and job["start_time"] == self._canonicalize_datetime(start_time)
-                and job["end_time"] == self._canonicalize_datetime(end_time)
-            ):
-                return job
+            self.log.info('job = %s' % job)
+            job_job_type = job.get("job_type", "")
+            if job_type.lower() == job_job_type.lower():
+                if (
+                    job["online"] == online
+                    and job["offline"] == offline
+                    and ("start_time" not in job or job["start_time"] == self._canonicalize_datetime(start_time))
+                    and ("end_time" not in job or job["end_time"] == self._canonicalize_datetime(end_time))
+                ):
+                    return job
         return None
 
     def submit_materialization_job(
@@ -293,7 +295,7 @@ class TectonHook(BaseHook):
         return result
 
     def get_dataframe_info(
-        self, feature_view: str, df_path: str, workspace: str
+        self, feature_view: str, workspace: str
     ):
         """
         Get ingest data frame information
@@ -303,7 +305,7 @@ class TectonHook(BaseHook):
         :return:
         """
         data = {"feature_view": feature_view, "workspace": workspace}
-        self._make_request(
+        return self._make_request(
             self.get_conn(), f"{JOBS_API_BASE}/{GET_DATAFRAME_INFO}", data, verbose=True
         )
 
@@ -319,7 +321,7 @@ class TectonHook(BaseHook):
         :return:
         """
         data = {"feature_view": feature_view, "df_path": df_path, "workspace": workspace}
-        self._make_request(
+        return self._make_request(
             self.get_conn(), f"{JOBS_API_BASE}/{INGEST_DATAFRAME}", data, verbose=True
         )
 

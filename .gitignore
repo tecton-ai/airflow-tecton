@@ -144,3 +144,5 @@ dmypy.json
 
 .idea
 *.iml
+
+.DS_Store
