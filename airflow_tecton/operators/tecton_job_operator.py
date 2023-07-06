@@ -49,7 +49,7 @@ class TectonJobOperator(BaseOperator):
         start_time: Union[str, datetime.datetime] = "{{ data_interval_start }}",
         end_time: Union[str, datetime.datetime] = "{{ data_interval_end }}",
         allow_overwrite: bool = False,
-        df_generator: Callable[[], pandas.DataFrame] = None,
+        df_generator: Callable = None,
         **kwargs,
     ):
         """

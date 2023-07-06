@@ -159,8 +159,7 @@ class TectonHook(BaseHook):
             jobs, reverse=True, key=lambda x: self._parse_time(x["created_at"])
         ):
             self.log.info('job = %s' % job)
-            job_job_type = job.get("job_type", "")
-            if job_type.lower() == job_job_type.lower():
+            if job_type.lower() == job.get("job_type", "").lower():
                 if (
                     job["online"] == online
                     and job["offline"] == offline
