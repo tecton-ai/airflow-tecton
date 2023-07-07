@@ -15,15 +15,14 @@ import datetime
 import logging
 import pandas
 import pprint
-from typing import Callable
-from typing import List
-from typing import Sequence
-from typing import Union
+from typing import Any, Callable, Collection, List, Mapping, Sequence, Union
 
 from airflow.models import BaseOperator
+from airflow.utils.context import context_merge
 
 from airflow_tecton.hooks.tecton_hook import TectonHook
 from airflow_tecton.operators.df_utils import upload_df_pandas
+from airflow.utils.operator_helpers import KeywordParameters
 
 
 class TectonTriggerOperator(BaseOperator):
@@ -37,7 +36,8 @@ class TectonTriggerOperator(BaseOperator):
     Use this if you have unpredictably arriving data but want Tecton to manage retries of jobs.
     """
 
-    template_fields: Sequence[str] = ("start_time", "end_time")
+    template_fields: Sequence[str] = ("start_time", "end_time", "templates_dict", "op_args", "op_kwargs")
+    template_fields_renderers = {"templates_dict": "json", "op_args": "py", "op_kwargs": "py"}
 
     def __init__(
         self,
@@ -50,7 +50,11 @@ class TectonTriggerOperator(BaseOperator):
         start_time: Union[str, datetime.datetime] = "{{ data_interval_start }}",
         end_time: Union[str, datetime.datetime] = "{{ data_interval_end }}",
         allow_overwrite: bool = False,
-        df_generator: Callable = None,
+        df_generator: Callable[..., pandas.DataFrame] = None,
+        op_args: Union[Collection[Any], None] = None,
+        op_kwargs: Union[Mapping[str, Any], None] = None,
+        templates_dict: Union[dict, None] = None,
+        templates_exts: Union[list[str], None] = None,
         **kwargs,
     ):
         """
@@ -74,7 +78,14 @@ class TectonTriggerOperator(BaseOperator):
         self.end_time = end_time
         self.allow_overwrite = allow_overwrite
         self.conn_id = conn_id
+        if not callable(df_generator):
+            raise Exception("`df_generator` param must be callable")
         self.df_generator = df_generator
+        self.op_args = op_args or ()
+        self.op_kwargs = op_kwargs or {}
+        self.templates_dict = templates_dict
+        if templates_exts:
+            self.template_ext = templates_exts
 
     def execute(self, context) -> List[str]:
         hook = TectonHook.create(self.conn_id)
@@ -107,7 +118,7 @@ class TectonTriggerOperator(BaseOperator):
                 logging.info(f"Job in {job['state']} state; triggering new job")
 
         if self.df_generator:
-            resp = self.ingest_feature_table_with_pandas_df(hook)
+            resp = self.ingest_feature_table_with_pandas_df(hook, context)
         else:
             resp = hook.submit_materialization_job(
                 workspace=self.workspace,
@@ -123,13 +134,16 @@ class TectonTriggerOperator(BaseOperator):
         logging.info(f"Launched job with id {job_id}")
         return [job_id]
 
-    def ingest_feature_table_with_pandas_df(self, hook):
+    def ingest_feature_table_with_pandas_df(self, hook, context):
+        context_merge(context, self.op_kwargs, templates_dict=self.templates_dict)
+        self.op_kwargs = KeywordParameters.determine(self.df_generator, self.op_args, context).unpacking()
+
         df_info = hook.get_dataframe_info(self.feature_view, self.workspace)
 
         df_path = df_info["df_path"]
         upload_url = df_info["signed_url_for_df_upload"]
 
-        df = self.df_generator()
+        df = self.df_generator(*self.op_args, **self.op_kwargs)
         upload_df_pandas(upload_url, df)
 
         return hook.ingest_dataframe(self.feature_view, df_path, self.workspace)
