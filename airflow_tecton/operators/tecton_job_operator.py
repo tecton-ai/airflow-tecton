@@ -66,6 +66,17 @@ class TectonJobOperator(BaseOperator):
         :param online: Whether job writes to online store
         :param offline: Whether job writes to offline store
         :param allow_overwrite: Whether jobs are able to run materialization for periods that previously have materialized data. Note that this can cause inconsistencies if the underlying data has changed.
+        :param df_generator: A reference to an object that is callable and returns pandas.DataFrame
+        :param op_args: a list of positional arguments that will get unpacked when
+            calling df_generator
+        :param op_kwargs: a dictionary of keyword arguments that will get unpacked
+            in df_generator
+        :param templates_dict: a dictionary where the values are templates that
+            will get templated by the Airflow engine sometime between
+            ``__init__`` and ``execute`` takes place and are made available
+            in df generator's context after the template has been applied. (templated)
+        :param templates_exts: a list of file extensions to resolve while
+            processing templated fields, for examples ``['.sql', '.hql']``
         :param kwargs: Airflow base kwargs passed to BaseOperator
         """
         super().__init__(**kwargs)
