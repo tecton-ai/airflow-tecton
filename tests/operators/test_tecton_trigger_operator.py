@@ -13,12 +13,12 @@
 # limitations under the License.
 from datetime import datetime
 import json
+import pandas as pd
 import requests
 import unittest
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-import pandas as pd
 from airflow.utils.context import Context
 
 from airflow_tecton.operators.tecton_trigger_operator import (
@@ -133,4 +133,3 @@ class TestTectonTriggerOperator(unittest.TestCase):
             templates_dict={'c': 4},
         )
         self.assertEqual(["abc"], operator.execute(Context()))
-
