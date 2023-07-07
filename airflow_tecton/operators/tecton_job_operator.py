@@ -78,7 +78,7 @@ class TectonJobOperator(BaseOperator):
         self.allow_overwrite = allow_overwrite
         self.conn_id = conn_id
         self.job_id = None
-        if not callable(df_generator):
+        if df_generator and not callable(df_generator):
             raise Exception("`df_generator` param must be callable")
         self.df_generator = df_generator
         self.op_args = op_args or ()
