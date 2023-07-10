@@ -25,6 +25,8 @@ Note this package is in preview and it will not work with your Tecton installati
 
 ## Changelog
 
+- 0.1.0 Add 2 new operators to support triggering Feature Table ingestion job 
+
 - 0.0.3 Support `allow_overwrite` setting in the operators
 
 - 0.0.2 Removed type annotations that caused compatibility issues with Airflow versions below 2.4.
@@ -94,9 +96,31 @@ def user_transaction_counts(transactions):
 
 If a Data Source input to the Feature View has `data_delay` set, then that delay will still be factored in to constructing training data sets but does not impact when the job can be triggered with the materialization API.
 
+Following is an example of definition of a `FeatureTable`
+```python
+from tecton import Entity, FeatureTable
+from tecton.types import Field, String, Int64, Timestamp
+
+from entities import df_user
+import datetime
+
+schema = [
+    Field("name", String),
+    Field("age", Int64),
+    Field("ts", Timestamp)
+]
+
+df_users = FeatureTable(
+    name="df_users", entities=[df_user], schema=schema, online=True, offline=True, ttl=datetime.timedelta(days=30)
+)
+
+``` 
+
 ## Materialization Job Submission
 
-There are two methods available to submit materialization jobs:
+### Batch Feature View Materialization Job Submission
+
+There are two methods available to submit materialization jobs for Batch Feature View:
 1) [TectonTriggerOperator](./airflow_tecton/operators/tecton_trigger_operator.py): This triggers a materialization job for a Feature View. Tecton will retry any failing jobs automatically. Note that completion of this operator only means submission succeeded. To wait for completion, you must combine this with `TectonSensor`.
 2) [TectonJobOperator](./airflow_tecton/operators/tecton_job_operator.py): This triggers a materialization job for a Feature View with no retries. Additionally, when this operator is terminated, it will make a best effort to clean up the execution of the materialization job. Using this operator allows you to use standard Airflow keyword arguments to configure retry behavior. Additionally, this operator is synchronous, meaning that when the operator has succeeded, the underlying job has succeeded.
 
@@ -130,6 +154,39 @@ TectonTriggerOperator(
     online=True,
     offline=True,
 )
+```
+
+### Feature Table Ingestion Materialization Job Submission
+```python
+import pandas as pd
+from datetime import datetime
+
+from airflow_tecton.operators.tecton_feature_table_trigger_operator import TectonFeatureTableTriggerOperator
+
+WORKSPACE = "prod"
+FEATURE_VIEW = "df_users"
+
+
+def generate_df():
+    data = {'name': ['Tom', 'Joseph', 'Krish', 'John'],
+            'age': [20, 21, 19, 18],
+            'ts': [datetime.fromtimestamp(1674819600),
+                   datetime.fromtimestamp(1675211580),
+                   datetime.fromtimestamp(1674347580),
+                   datetime.fromtimestamp(1674725580)]}
+    return pd.DataFrame(data)
+
+...
+
+tecton_trigger = TectonFeatureTableTriggerOperator(
+    task_id="trigger_tecton_feature_table",
+    workspace=WORKSPACE,
+    feature_view=FEATURE_VIEW,
+    online=True,
+    offline=True,
+    df_generator=generate_df,
+)
+
 ```
 
 ## Waiting For Materialization
