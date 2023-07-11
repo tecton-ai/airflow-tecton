@@ -15,12 +15,10 @@ import pandas
 from typing import Any, Callable, Collection, Mapping, Sequence, Union
 
 from airflow.models import BaseOperator
-from airflow.utils.context import context_merge
 
 from airflow_tecton.hooks.tecton_hook import TectonHook
-from airflow_tecton.operators.df_utils import upload_df_pandas, ingest_feature_table_with_pandas_df
-from airflow_tecton.operators.job_utils import is_job_finished, check_job_status, kill_job
-from airflow.utils.operator_helpers import KeywordParameters
+from airflow_tecton.operators.df_utils import ingest_feature_table_with_pandas_df
+from airflow_tecton.operators.job_utils import wait_until_completion, kill_job
 
 
 class TectonFeatureTableJobOperator(BaseOperator):
@@ -45,7 +43,6 @@ class TectonFeatureTableJobOperator(BaseOperator):
         feature_view: str,
         online: bool,
         offline: bool,
-        allow_overwrite: bool = False,
         df_generator: Callable[..., pandas.DataFrame] = None,
         op_args: Union[Collection[Any], None] = None,
         op_kwargs: Union[Mapping[str, Any], None] = None,
@@ -60,9 +57,6 @@ class TectonFeatureTableJobOperator(BaseOperator):
         :param feature_view: FeatureView name
         :param online: Whether job writes to online store
         :param offline: Whether job writes to offline store
-        :param allow_overwrite: Whether jobs are able to run materialization
-               for periods that previously have materialized data. Note that
-               this can cause inconsistencies if the underlying data has changed.
         :param df_generator: A reference to an object that is callable and
                returns pandas.DataFrame
         :param op_args: a list of positional arguments that will get unpacked when
@@ -82,7 +76,6 @@ class TectonFeatureTableJobOperator(BaseOperator):
         self.feature_view = feature_view
         self.online = online
         self.offline = offline
-        self.allow_overwrite = allow_overwrite
         self.conn_id = conn_id
         self.job_id = None
         if df_generator and not callable(df_generator):
@@ -97,16 +90,12 @@ class TectonFeatureTableJobOperator(BaseOperator):
     def execute(self, context) -> Any:
         hook = TectonHook.create(self.conn_id)
 
-        if is_job_finished(hook, self.workspace, self.feature_view, self.online,
-                           self.offline, self.allow_overwrite, None, None, "ingest"):
-            return
-
         resp = ingest_feature_table_with_pandas_df(hook, self.workspace, self.feature_view, context,
                                                    self.df_generator, self.op_args, self.op_kwargs,
                                                    self.templates_dict)
 
         self.job_id = resp["job"]["id"]
-        check_job_status(hook, self.workspace, self.feature_view, self.job_id)
+        wait_until_completion(hook, self.workspace, self.feature_view, self.job_id)
 
     def on_kill(self) -> None:
         kill_job(TectonHook.create(self.conn_id), self.workspace, self.feature_view, self.job_id)

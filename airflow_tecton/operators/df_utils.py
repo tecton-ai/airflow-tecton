@@ -25,11 +25,11 @@ def upload_df_pandas(upload_url: str, df: pd.DataFrame):
 
     # Maximum 1GB per ingestion
     if out_buffer.__sizeof__() > 1_000_000_000:
-        raise Exception(f"Pandas dataframe size, {out_buffer.__sizeof__()}, is too large")
+        raise Exception(f"Pandas dataframe size, {out_buffer.__sizeof__()}, is larger than 1GB")
 
     r = requests.put(upload_url, data=out_buffer.getvalue())
     if r.status_code != 200:
-        raise Exception("Pandas dataframe upload fails, %s" % r.status_code)
+        raise Exception("Pandas dataframe upload failed with %s" % r.status_code)
     return r.status_code
 
 

@@ -25,7 +25,7 @@ Note this package is in preview and it will not work with your Tecton installati
 
 ## Changelog
 
-- 0.1.0 Add 2 new operators to support triggering Feature Table ingestion job 
+- 0.1.0 Add 2 new operators to support triggering Feature Table ingestion jobs 
 
 - 0.0.3 Support `allow_overwrite` setting in the operators
 
@@ -143,7 +143,8 @@ TectonJobOperator(
     feature_view="my_fv",
     online=False,
     offline=True,
-    retries=3
+    retries=3,
+    dag=dag,
 )
 
 
@@ -153,6 +154,7 @@ TectonTriggerOperator(
     feature_view="my_fv",
     online=True,
     offline=True,
+    dag=dag,
 )
 ```
 
@@ -185,6 +187,7 @@ tecton_trigger = TectonFeatureTableTriggerOperator(
     online=True,
     offline=True,
     df_generator=generate_df,
+    dag=dag,
 )
 
 ```
