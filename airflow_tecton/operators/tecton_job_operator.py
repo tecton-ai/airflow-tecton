@@ -31,6 +31,7 @@ class TectonJobOperator(BaseOperator):
 
     Use this if you want to submit a Tecton job via Airflow and control retries via Airflow. Each attempt of this operator creates 1 job.
     """
+
     template_fields: Sequence[str] = ("start_time", "end_time")
 
     def __init__(
