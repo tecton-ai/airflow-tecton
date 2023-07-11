@@ -169,13 +169,12 @@ WORKSPACE = "prod"
 FEATURE_VIEW = "df_users"
 
 
-def generate_df():
+def generate_df(*args, **kwargs):
+    ds = kwargs.get('ds')
+    ts = datetime.strptime(ds, '%Y-%m-%d') 
     data = {'name': ['Tom', 'Joseph', 'Krish', 'John'],
             'age': [20, 21, 19, 18],
-            'ts': [datetime.fromtimestamp(1674819600),
-                   datetime.fromtimestamp(1675211580),
-                   datetime.fromtimestamp(1674347580),
-                   datetime.fromtimestamp(1674725580)]}
+            'ts': [ts, ts, ts, ts]}
     return pd.DataFrame(data)
 
 ...
