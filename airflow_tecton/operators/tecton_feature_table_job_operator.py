@@ -25,9 +25,7 @@ from airflow_tecton.operators.job_utils import wait_until_completion, kill_job
 class TectonFeatureTableJobOperator(BaseOperator):
     """
     An Airflow operator that launches a Tecton Feature Table ingestion job,
-    and waits for its completion. If the latest job with the same params
-    is running, it will cancel it first. If the latest job with the same
-    params is successful, this will return without running a new job.
+    and waits for its completion.
 
     Use this if you want to submit a Tecton job via Airflow and control
     retries via Airflow. Each attempt of this operator creates 1 job.
