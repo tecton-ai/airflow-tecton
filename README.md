@@ -25,9 +25,9 @@ Note this package is in preview and it will not work with your Tecton installati
 
 ## Changelog
 
-- 0.1.0 Add 2 new operators to support triggering Feature Table ingestion jobs 
+- 0.1.0 Added 2 new operators to support triggering Feature Table ingestion jobs 
 
-- 0.0.3 Support `allow_overwrite` setting in the operators
+- 0.0.3 Supported `allow_overwrite` setting in the operators
 
 - 0.0.2 Removed type annotations that caused compatibility issues with Airflow versions below 2.4.
 
@@ -118,9 +118,9 @@ df_users = FeatureTable(
 
 ## Materialization Job Submission
 
-### Feature Views Materialization Job Submission
+### Feature View Materialization Job Submission
 
-There are two methods available to submit materialization jobs for Batch Feature View:
+There are two methods available to submit materialization jobs for Batch Feature Views:
 1) [TectonTriggerOperator](./airflow_tecton/operators/tecton_trigger_operator.py): This triggers a materialization job for a Feature View. Tecton will retry any failing jobs automatically. Note that completion of this operator only means submission succeeded. To wait for completion, you must combine this with `TectonSensor`.
 2) [TectonJobOperator](./airflow_tecton/operators/tecton_job_operator.py): This triggers a materialization job for a Feature View with no retries. Additionally, when this operator is terminated, it will make a best effort to clean up the execution of the materialization job. Using this operator allows you to use standard Airflow keyword arguments to configure retry behavior. Additionally, this operator is synchronous, meaning that when the operator has succeeded, the underlying job has succeeded.
 
@@ -156,40 +156,7 @@ TectonTriggerOperator(
     offline=True,
     dag=dag,
 )
-```
-
-### Feature Table Ingestion Materialization Job Submission
-```python
-import pandas as pd
-from datetime import datetime
-
-from airflow_tecton.operators.tecton_feature_table_trigger_operator import TectonFeatureTableTriggerOperator
-
-WORKSPACE = "prod"
-FEATURE_VIEW = "df_users"
-
-
-def generate_df(*args, **kwargs):
-    ds = kwargs.get('ds')
-    ts = datetime.strptime(ds, '%Y-%m-%d') 
-    data = {'name': ['Tom', 'Joseph', 'Krish', 'John'],
-            'age': [20, 21, 19, 18],
-            'ts': [ts, ts, ts, ts]}
-    return pd.DataFrame(data)
-
-...
-
-tecton_trigger = TectonFeatureTableTriggerOperator(
-    task_id="trigger_tecton_feature_table",
-    workspace=WORKSPACE,
-    feature_view=FEATURE_VIEW,
-    online=True,
-    offline=True,
-    df_generator=generate_df,
-    dag=dag,
-)
-
-```
+``` 
 
 ## Waiting For Materialization
 
