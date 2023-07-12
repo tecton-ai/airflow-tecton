@@ -15,8 +15,17 @@ import logging
 import pprint
 import time
 
+from airflow_tecton.hooks.tecton_hook import TectonHook
 
-def wait_until_completion(hook, workspace, feature_view, job_id):
+
+def wait_until_completion(hook: TectonHook,
+                          workspace: str,
+                          feature_view: str,
+                          job_id: str):
+    """
+    Wait materialization job to finish successfully.
+    If the job fails, throw exception.
+    """
     job_result = hook.get_materialization_job(
         workspace, feature_view, job_id
     )["job"]
@@ -41,7 +50,14 @@ def wait_until_completion(hook, workspace, feature_view, job_id):
         )
 
 
-def kill_job(hook, workspace, feature_view, job_id):
+def kill_job(hook: TectonHook,
+             workspace: str,
+             feature_view: str,
+             job_id: str):
+    """
+    kill job with job_id when job_id is available.
+    o/w log the error.
+    """
     if job_id:
         logging.info(f"Attempting to kill job {job_id}")
         hook.cancel_materialization_job(

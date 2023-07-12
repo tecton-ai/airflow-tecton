@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import io
+from typing import Callable, Any, Collection, Mapping, Optional
+
 import pandas as pd
 import requests
 
-from airflow.utils.context import context_merge
+from airflow.utils.context import context_merge, Context
 from airflow.utils.operator_helpers import KeywordParameters
+
+from airflow_tecton.hooks.tecton_hook import TectonHook
 
 
 def upload_df_pandas(upload_url: str, df: pd.DataFrame):
@@ -33,8 +37,14 @@ def upload_df_pandas(upload_url: str, df: pd.DataFrame):
     return r.status_code
 
 
-def ingest_feature_table_with_pandas_df(hook, workspace, feature_view, context, df_generator,
-                                        op_args, op_kwargs, templates_dict):
+def ingest_feature_table_with_pandas_df(hook: TectonHook,
+                                        workspace: str,
+                                        feature_view: str,
+                                        context: Context,
+                                        df_generator: Callable,
+                                        op_args: Optional[Collection[Any]],
+                                        op_kwargs: Optional[Mapping[str, Any]],
+                                        templates_dict: Optional[dict[str, Any]]):
     context_merge(context, op_kwargs, templates_dict=templates_dict)
     new_op_kwargs = KeywordParameters.determine(df_generator, op_args, context).unpacking()
     op_kwargs.update(new_op_kwargs)

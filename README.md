@@ -118,7 +118,7 @@ df_users = FeatureTable(
 
 ## Materialization Job Submission
 
-### Batch Feature View Materialization Job Submission
+### Feature Views Materialization Job Submission
 
 There are two methods available to submit materialization jobs for Batch Feature View:
 1) [TectonTriggerOperator](./airflow_tecton/operators/tecton_trigger_operator.py): This triggers a materialization job for a Feature View. Tecton will retry any failing jobs automatically. Note that completion of this operator only means submission succeeded. To wait for completion, you must combine this with `TectonSensor`.

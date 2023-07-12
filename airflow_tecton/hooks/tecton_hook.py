@@ -163,8 +163,8 @@ class TectonHook(BaseHook):
                 if (
                     job["online"] == online
                     and job["offline"] == offline
-                    and ("start_time" not in job or job["start_time"] == self._canonicalize_datetime(start_time))
-                    and ("end_time" not in job or job["end_time"] == self._canonicalize_datetime(end_time))
+                    and (job["start_time"] == self._canonicalize_datetime(start_time))
+                    and (job["end_time"] == self._canonicalize_datetime(end_time))
                 ):
                     return job
         return None

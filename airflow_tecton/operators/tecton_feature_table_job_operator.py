@@ -15,6 +15,7 @@ import pandas
 from typing import Any, Callable, Collection, Mapping, Sequence, Union
 
 from airflow.models import BaseOperator
+from airflow.utils.context import Context
 
 from airflow_tecton.hooks.tecton_hook import TectonHook
 from airflow_tecton.operators.df_utils import ingest_feature_table_with_pandas_df
@@ -87,7 +88,7 @@ class TectonFeatureTableJobOperator(BaseOperator):
         if templates_exts:
             self.template_ext = templates_exts
 
-    def execute(self, context) -> Any:
+    def execute(self, context: Context) -> Any:
         hook = TectonHook.create(self.conn_id)
 
         resp = ingest_feature_table_with_pandas_df(hook, self.workspace, self.feature_view, context,
