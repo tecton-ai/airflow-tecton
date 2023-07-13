@@ -31,7 +31,7 @@ def wait_until_completion(hook: TectonHook,
         workspace, feature_view, job_id
     )["job"]
     while job_result.get("state", "").upper().endswith("RUNNING"):
-        if "attempts" in job_result:
+        if len(job_result.get("attempts", [])) > 0:
             attempts = job_result["attempts"]
             latest_attempt = attempts[-1]
             logging.info(

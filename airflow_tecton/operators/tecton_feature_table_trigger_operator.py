@@ -25,9 +25,7 @@ from airflow_tecton.operators.df_utils import ingest_feature_table_with_pandas_d
 class TectonFeatureTableTriggerOperator(BaseOperator):
     """
     An Airflow operator that kicks off a Tecton Feature Table ingestion job,
-    and does not wait for its completion. If the latest job with the
-    same params is in the running or success state, this operator
-    will do nothing.
+    and does not wait for its completion.
 
     Note that this will use Tecton managed retries.
 

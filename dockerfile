@@ -9,8 +9,6 @@ RUN apt-get update \
 RUN mkdir -p /opt/airflow_tecton/
 WORKDIR /opt/airflow_tecton/
 
-RUN pip install pydantic==1.10.9
-RUN pip install pydantic-core==0.39.0
 RUN pip install pandas
 RUN pip install pyarrow
 RUN pip install fastparquet

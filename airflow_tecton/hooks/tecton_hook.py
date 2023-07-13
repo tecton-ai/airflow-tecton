@@ -309,7 +309,11 @@ class TectonHook(BaseHook):
         )
 
     def ingest_dataframe(
-        self, feature_view: str, df_path: str, workspace: str
+        self,
+        feature_view: str,
+        df_path: str,
+        workspace: str,
+        tecton_managed_retries: bool = False,
     ):
         """
         Ingest data frame to FeatureTable from s3 path
@@ -317,9 +321,14 @@ class TectonHook(BaseHook):
         :param feature_view: feature view name
         :param df_path: s3 path containing pandas dataframe data
         :param workspace:  workspace name
+        :param tecton_managed_retries: Whether the job should be retried by Tecton automatically.
+               Set to `False` if you want to control and submit retries manually.
         :return:
         """
-        data = {"feature_view": feature_view, "df_path": df_path, "workspace": workspace}
+        data = {"feature_view": feature_view,
+                "df_path": df_path,
+                "workspace": workspace,
+                "use_tecton_managed_retries": tecton_managed_retries}
         return self._make_request(
             self.get_conn(), f"{JOBS_API_BASE}/{INGEST_DATAFRAME}", data, verbose=True
         )
