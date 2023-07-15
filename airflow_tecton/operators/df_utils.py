@@ -44,7 +44,8 @@ def ingest_feature_table_with_pandas_df(hook: TectonHook,
                                         df_generator: Callable,
                                         op_args: Optional[Collection[Any]],
                                         op_kwargs: Optional[Mapping[str, Any]],
-                                        templates_dict: Optional[dict[str, Any]]):
+                                        templates_dict: Optional[dict[str, Any]],
+                                        tecton_managed_retries: bool = False):
     context_merge(context, op_kwargs, templates_dict=templates_dict)
     new_op_kwargs = KeywordParameters.determine(df_generator, op_args, context).unpacking()
     op_kwargs.update(new_op_kwargs)
@@ -57,4 +58,4 @@ def ingest_feature_table_with_pandas_df(hook: TectonHook,
     df = df_generator(*op_args, **op_kwargs)
     upload_df_pandas(upload_url, df)
 
-    return hook.ingest_dataframe(feature_view, df_path, workspace)
+    return hook.ingest_dataframe(feature_view, df_path, workspace, tecton_managed_retries)

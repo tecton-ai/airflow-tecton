@@ -56,7 +56,7 @@ def kill_job(hook: TectonHook,
              feature_view: str,
              job_id: Optional[str]):
     """
-    kill job with job_id when job_id is available. otherwise log the error.
+    kill job with job_id when job_id is available.
     """
     if job_id:
         logging.info(f"Attempting to kill job {job_id}")

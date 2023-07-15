@@ -91,7 +91,7 @@ class TectonFeatureTableTriggerOperator(BaseOperator):
 
         resp = ingest_feature_table_with_pandas_df(hook, self.workspace, self.feature_view, context,
                                                    self.df_generator, self.op_args, self.op_kwargs,
-                                                   self.templates_dict)
+                                                   self.templates_dict, True)
 
         new_job_id = resp["job"]["id"]
         logging.info(f"Launched job with id {new_job_id}")
