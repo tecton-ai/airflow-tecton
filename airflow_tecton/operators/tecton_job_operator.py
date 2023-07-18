@@ -15,13 +15,12 @@ import datetime
 import logging
 import pprint
 import time
-from typing import Any
-from typing import Sequence
-from typing import Union
+from typing import Any, Sequence, Union
 
 from airflow.models import BaseOperator
 
 from airflow_tecton.hooks.tecton_hook import TectonHook
+from airflow_tecton.operators.job_utils import wait_until_completion, kill_job
 
 
 class TectonJobOperator(BaseOperator):
@@ -73,6 +72,7 @@ class TectonJobOperator(BaseOperator):
 
     def execute(self, context) -> Any:
         hook = TectonHook.create(self.conn_id)
+
         job = hook.find_materialization_job(
             workspace=self.workspace,
             feature_view=self.feature_view,
@@ -120,37 +120,10 @@ class TectonJobOperator(BaseOperator):
             allow_overwrite=self.allow_overwrite,
             tecton_managed_retries=False,
         )
+
         self.job_id = resp["job"]["id"]
-        job_result = hook.get_materialization_job(
-            self.workspace, self.feature_view, self.job_id
-        )["job"]
-        while job_result["state"].upper().endswith("RUNNING"):
-            if "attempts" in job_result:
-                attempts = job_result["attempts"]
-                latest_attempt = attempts[-1]
-                logging.info(
-                    f"Latest attempt #{len(attempts)} in state {latest_attempt['state']} with URL {latest_attempt['run_url']}"
-                )
-            else:
-                logging.info(f"No attempt launched yet")
-            time.sleep(60)
-            job_result = hook.get_materialization_job(
-                self.workspace, self.feature_view, self.job_id
-            )["job"]
-        if job_result["state"].upper().endswith("SUCCESS"):
-            return
-        else:
-            raise Exception(
-                f"Final job state was {job_result['state']}. Final response:\n {job_result}"
-            )
+
+        wait_until_completion(hook, self.workspace, self.feature_view, self.job_id)
 
     def on_kill(self) -> None:
-        if self.job_id:
-            logging.info(f"Attempting to kill job {self.job_id}")
-            hook = TectonHook.create(self.conn_id)
-            hook.cancel_materialization_job(
-                self.workspace, self.feature_view, self.job_id
-            )
-            logging.info(f"Successfully killed job {self.job_id}")
-        else:
-            logging.debug(f"No job started; none to kill")
+        kill_job(TectonHook.create(self.conn_id), self.workspace, self.feature_view, self.job_id)

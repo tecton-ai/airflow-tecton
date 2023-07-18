@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import datetime
+from datetime import datetime
 import unittest
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -38,8 +38,8 @@ class TestTectonTriggerOperator(unittest.TestCase):
             feature_view="fv",
             online=True,
             offline=True,
-            start_time=datetime.datetime(2022, 7, 1),
-            end_time=datetime.datetime(2022, 7, 2),
+            start_time=datetime(2022, 7, 1),
+            end_time=datetime(2022, 7, 2),
         )
         self.assertEqual(["abc"], operator.execute(None))
 
@@ -55,8 +55,8 @@ class TestTectonTriggerOperator(unittest.TestCase):
             feature_view="fv",
             online=True,
             offline=True,
-            start_time=datetime.datetime(2022, 7, 1),
-            end_time=datetime.datetime(2022, 7, 2),
+            start_time=datetime(2022, 7, 1),
+            end_time=datetime(2022, 7, 2),
         )
         self.assertEqual(["cba"], operator.execute(None))
         assert mock_hook.submit_materialization_job.call_count == 0
@@ -74,8 +74,8 @@ class TestTectonTriggerOperator(unittest.TestCase):
             feature_view="fv",
             online=True,
             offline=True,
-            start_time=datetime.datetime(2022, 7, 1),
-            end_time=datetime.datetime(2022, 7, 2),
+            start_time=datetime(2022, 7, 1),
+            end_time=datetime(2022, 7, 2),
             allow_overwrite=True,
         )
         self.assertEqual(["abc"], operator.execute(None))

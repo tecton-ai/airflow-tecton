@@ -25,7 +25,9 @@ Note this package is in preview and it will not work with your Tecton installati
 
 ## Changelog
 
-- 0.0.3 Support `allow_overwrite` setting in the operators
+- 0.1.0 Added 2 new operators to support triggering Feature Table ingestion jobs 
+
+- 0.0.3 Added support for `allow_overwrite` setting in the operators
 
 - 0.0.2 Removed type annotations that caused compatibility issues with Airflow versions below 2.4.
 
@@ -119,7 +121,7 @@ TectonJobOperator(
     feature_view="my_fv",
     online=False,
     offline=True,
-    retries=3
+    retries=3,
 )
 
 
@@ -130,7 +132,7 @@ TectonTriggerOperator(
     online=True,
     offline=True,
 )
-```
+``` 
 
 ## Waiting For Materialization
 

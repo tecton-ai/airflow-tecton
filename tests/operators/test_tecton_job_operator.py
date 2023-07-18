@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import datetime
+from datetime import datetime
 import unittest
 from unittest.mock import patch, MagicMock, Mock
 
@@ -74,8 +74,8 @@ class TestTectonJobOperator(unittest.TestCase):
             feature_view="fv",
             online=True,
             offline=True,
-            start_time=datetime.datetime(2022, 7, 1),
-            end_time=datetime.datetime(2022, 7, 2),
+            start_time=datetime(2022, 7, 1),
+            end_time=datetime(2022, 7, 2),
         )
         operator.execute(None)
 
@@ -101,8 +101,8 @@ class TestTectonJobOperator(unittest.TestCase):
             feature_view="fv",
             online=True,
             offline=True,
-            start_time=datetime.datetime(2022, 7, 1),
-            end_time=datetime.datetime(2022, 7, 2),
+            start_time=datetime(2022, 7, 1),
+            end_time=datetime(2022, 7, 2),
         )
         operator.execute(None)
         assert mock_hook.cancel_materialization_job.call_count == 1
@@ -119,8 +119,8 @@ class TestTectonJobOperator(unittest.TestCase):
             feature_view="fv",
             online=True,
             offline=True,
-            start_time=datetime.datetime(2022, 7, 1),
-            end_time=datetime.datetime(2022, 7, 2),
+            start_time=datetime(2022, 7, 1),
+            end_time=datetime(2022, 7, 2),
         )
         operator.execute(None)
         assert mock_hook.submit_materialization_job.call_count == 0
@@ -141,8 +141,8 @@ class TestTectonJobOperator(unittest.TestCase):
             feature_view="fv",
             online=True,
             offline=True,
-            start_time=datetime.datetime(2022, 7, 1),
-            end_time=datetime.datetime(2022, 7, 2),
+            start_time=datetime(2022, 7, 1),
+            end_time=datetime(2022, 7, 2),
             allow_overwrite=True,
         )
         operator.execute(None)
@@ -167,8 +167,8 @@ class TestTectonJobOperator(unittest.TestCase):
             feature_view="fv",
             online=True,
             offline=True,
-            start_time=datetime.datetime(2022, 7, 1),
-            end_time=datetime.datetime(2022, 7, 2),
+            start_time=datetime(2022, 7, 1),
+            end_time=datetime(2022, 7, 2),
         )
         with self.assertRaises(Exception) as e:
             operator.execute(None)
@@ -193,8 +193,8 @@ class TestTectonJobOperator(unittest.TestCase):
             feature_view="fv",
             online=True,
             offline=True,
-            start_time=datetime.datetime(2022, 7, 1),
-            end_time=datetime.datetime(2022, 7, 2),
+            start_time=datetime(2022, 7, 1),
+            end_time=datetime(2022, 7, 2),
         )
         with self.assertRaises(Exception) as e:
             operator.execute(None)
@@ -212,8 +212,8 @@ class TestTectonJobOperator(unittest.TestCase):
             feature_view="fv",
             online=True,
             offline=True,
-            start_time=datetime.datetime(2022, 7, 1),
-            end_time=datetime.datetime(2022, 7, 2),
+            start_time=datetime(2022, 7, 1),
+            end_time=datetime(2022, 7, 2),
         )
         operator.on_kill()
         self.assertEqual(0, mock_hook.cancel_job.call_count)

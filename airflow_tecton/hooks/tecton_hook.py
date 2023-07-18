@@ -32,6 +32,8 @@ GET_JOB_METHOD = "get-materialization-job"
 CANCEL_JOB_METHOD = "cancel-materialization-job"
 LIST_JOB_METHOD = "list-materialization-jobs"
 READINESS_METHOD = "get-latest-ready-time"
+INGEST_DATAFRAME = "ingest-dataframe"
+GET_DATAFRAME_INFO = "get-dataframe-info"
 
 
 class TectonHook(BaseHook):
@@ -145,6 +147,7 @@ class TectonHook(BaseHook):
         end_time: Union[datetime.datetime, str],
         online: bool,
         offline: bool,
+        job_type: str ='batch',
     ):
         jobs = [
             x
@@ -155,15 +158,15 @@ class TectonHook(BaseHook):
         for job in sorted(
             jobs, reverse=True, key=lambda x: self._parse_time(x["created_at"])
         ):
-            if job["job_type"].lower() != "batch":
-                continue
-            if (
-                job["online"] == online
-                and job["offline"] == offline
-                and job["start_time"] == self._canonicalize_datetime(start_time)
-                and job["end_time"] == self._canonicalize_datetime(end_time)
-            ):
-                return job
+            self.log.info('job = %s' % job)
+            if job_type.lower() == job.get("job_type", "").lower():
+                if (
+                    job["online"] == online
+                    and job["offline"] == offline
+                    and (job["start_time"] == self._canonicalize_datetime(start_time))
+                    and (job["end_time"] == self._canonicalize_datetime(end_time))
+                ):
+                    return job
         return None
 
     def submit_materialization_job(
@@ -289,6 +292,46 @@ class TectonHook(BaseHook):
             result[offline_key] = self._parse_time(result[offline_key])
 
         return result
+
+    def get_dataframe_info(
+        self, feature_view: str, workspace: str
+    ):
+        """
+        Get ingest data frame information
+
+        :param feature_view: feature view name
+        :param workspace:  workspace name
+        :return:
+        """
+        data = {"feature_view": feature_view, "workspace": workspace}
+        return self._make_request(
+            self.get_conn(), f"{JOBS_API_BASE}/{GET_DATAFRAME_INFO}", data, verbose=True
+        )
+
+    def ingest_dataframe(
+        self,
+        feature_view: str,
+        df_path: str,
+        workspace: str,
+        tecton_managed_retries: bool = False,
+    ):
+        """
+        Ingest data frame to FeatureTable from s3 path
+
+        :param feature_view: feature view name
+        :param df_path: s3 path containing pandas dataframe data
+        :param workspace:  workspace name
+        :param tecton_managed_retries: Whether the job should be retried by Tecton automatically.
+               Set to `False` if you want to control and submit retries manually.
+        :return:
+        """
+        data = {"feature_view": feature_view,
+                "df_path": df_path,
+                "workspace": workspace,
+                "use_tecton_managed_retries": tecton_managed_retries}
+        return self._make_request(
+            self.get_conn(), f"{JOBS_API_BASE}/{INGEST_DATAFRAME}", data, verbose=True
+        )
 
     @classmethod
     def create(cls, conn_id: str):
