@@ -21,8 +21,6 @@ Two basic capabilities are supported:
 1) Submitting materialization jobs
 2) Waiting for Feature View/Feature Service data to materialize.
 
-Note this package is in preview and it will not work with your Tecton installation unless enabled.
-
 ## Changelog
 
 - 0.1.0 Added 2 new operators to support triggering Feature Table ingestion jobs 
