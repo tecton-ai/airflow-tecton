@@ -61,23 +61,24 @@ class TectonHook(BaseHook):
         self.conn = self.get_connection(conn_id)
         self._session = None
 
+    def _create_conn(self):
+        session = requests.Session()
+
+        conn = self.conn
+
+        if conn.host and conn.host.startswith("http"):
+            self.base_url = conn.host
+        else:
+            host = "https://" + conn.host
+            self.base_url = host
+
+        session.headers.update({"Authorization": f"Tecton-key {conn.password}"})
+        session.headers.update({"Content-type": "application/json"})
+        self._session = session
+
     def get_conn(self) -> requests.Session:
-        # TODO: configure retries here
         if self._session is None:
-            session = requests.Session()
-
-            conn = self.conn
-
-            if conn.host and conn.host.startswith("http"):
-                self.base_url = conn.host
-            else:
-                host = "https://" + conn.host
-                self.base_url = host
-
-            session.headers.update({"Authorization": f"Tecton-key {conn.password}"})
-            session.headers.update({"Content-type": "application/json"})
-            self._session = session
-
+            self._create_conn()
         return self._session
 
     def _pformat_dict(self, d):
@@ -95,26 +96,43 @@ class TectonHook(BaseHook):
         verbose: bool = False,
     ) -> Dict[str, Any]:
         full_path = urllib.parse.urljoin(self.base_url, url)
-        if verbose:
-            logging.info(
-                f"Making POST request to {full_path} with body=\n{self._pformat_dict(data)}"
-            )
-        resp = conn.post(full_path, json.dumps(data))
-        try:
-            resp.raise_for_status()
-        except Exception as e:
-            exc = e
-            if "error" in resp.json():
-                raise Exception(f"Tecton error: {resp.json()['error']}")
-            raise e
-        else:
-            exc = None
-        finally:
-            if verbose or exc:
+        num_retries = 3
+
+        for i in range(num_retries):
+            if verbose:
                 logging.info(
-                    f"Response: Code={resp.status_code} Body=\n{self._pformat_dict(resp.json())}"
+                    f"Making POST request to {full_path} with body=\n{self._pformat_dict(data)}"
                 )
-        return resp.json()
+
+            try:
+                resp = conn.post(full_path, json.dumps(data))
+            except requests.exceptions.ConnectionError as re:
+                exc = re
+                if verbose:
+                    logging.info(
+                        f"Recieved ConnectionError for attempt {i}/{num_retries}. Retrying..."
+                    )
+                # Refresh session
+                self._create_conn()
+                continue
+
+            try:
+                resp.raise_for_status()
+            except Exception as e:
+                exc = e
+                if "error" in resp.json():
+                    raise Exception(f"Tecton error: {resp.json()['error']}")
+                raise e
+            else:
+                exc = None
+            finally:
+                if verbose or exc:
+                    logging.info(
+                        f"Response: Code={resp.status_code} Body=\n{self._pformat_dict(resp.json())}"
+                    )
+            return resp.json()
+
+        raise Exception(f"Max retries reached making request to {full_path}")
 
     def _canonicalize_datetime(self, dt) -> str:
         if isinstance(dt, str):
@@ -147,7 +165,7 @@ class TectonHook(BaseHook):
         end_time: Union[datetime.datetime, str],
         online: bool,
         offline: bool,
-        job_type: str ='batch',
+        job_type: str = "batch",
     ):
         jobs = [
             x
@@ -158,7 +176,7 @@ class TectonHook(BaseHook):
         for job in sorted(
             jobs, reverse=True, key=lambda x: self._parse_time(x["created_at"])
         ):
-            self.log.info('job = %s' % job)
+            self.log.info("job = %s" % job)
             if job_type.lower() == job.get("job_type", "").lower():
                 if (
                     job["online"] == online
@@ -293,9 +311,7 @@ class TectonHook(BaseHook):
 
         return result
 
-    def get_dataframe_info(
-        self, feature_view: str, workspace: str
-    ):
+    def get_dataframe_info(self, feature_view: str, workspace: str):
         """
         Get ingest data frame information
 
@@ -325,10 +341,12 @@ class TectonHook(BaseHook):
                Set to `False` if you want to control and submit retries manually.
         :return:
         """
-        data = {"feature_view": feature_view,
-                "df_path": df_path,
-                "workspace": workspace,
-                "use_tecton_managed_retries": tecton_managed_retries}
+        data = {
+            "feature_view": feature_view,
+            "df_path": df_path,
+            "workspace": workspace,
+            "use_tecton_managed_retries": tecton_managed_retries,
+        }
         return self._make_request(
             self.get_conn(), f"{JOBS_API_BASE}/{INGEST_DATAFRAME}", data, verbose=True
         )
