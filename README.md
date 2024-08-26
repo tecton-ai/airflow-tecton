@@ -23,7 +23,9 @@ Two basic capabilities are supported:
 
 ## Changelog
 
-- 0.1.0 Added 2 new operators to support triggering Feature Table ingestion jobs 
+- 0.1.1 Improved Tecton connection stability by adding retries for requests
+
+- 0.1.0 Added 2 new operators to support triggering Feature Table ingestion jobs
 
 - 0.0.3 Added support for `allow_overwrite` setting in the operators
 
@@ -130,7 +132,7 @@ TectonTriggerOperator(
     online=True,
     offline=True,
 )
-``` 
+```
 
 ## Waiting For Materialization
 
