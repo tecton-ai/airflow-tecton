@@ -19,7 +19,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="airflow-tecton",
-    version="0.1.0",
+    version="0.1.1",
     description="Provider for using Tecton with Airflow.",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -35,11 +35,13 @@ setup(
         "airflow_tecton.sensors",
         "airflow_tecton.operators",
     ],
-    install_requires=["apache-airflow>=2.0",
-                      "requests",
-                      "pandas",
-                      "pyarrow",
-                      "fastparquet"],
+    install_requires=[
+        "apache-airflow>=2.0",
+        "requests",
+        "pandas",
+        "pyarrow",
+        "fastparquet",
+    ],
     setup_requires=["setuptools", "wheel"],
     test_require=["requests_mock"],
     url="http://tecton.ai/",
