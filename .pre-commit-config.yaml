@@ -59,3 +59,6 @@ repos:
           - pytest
           - apache-airflow>=2.0
           - requests-mock
+          - pandas
+          - pyarrow
+          - fastparquet
