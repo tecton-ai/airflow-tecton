@@ -106,12 +106,15 @@ class TectonHook(BaseHook):
 
             try:
                 resp = conn.post(full_path, json.dumps(data))
-            except requests.exceptions.ConnectionError as re:
-                exc = re
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout,
+            ) as re:
                 if verbose:
                     logging.info(
-                        f"Recieved ConnectionError for attempt {i}/{num_retries}. Retrying..."
+                        f"Received an error for attempt {i + 1}/{num_retries}. Error: {re}"
                     )
+                    logging.info(f"Retrying request to {full_path}")
                 # Refresh session
                 self._create_conn()
                 continue
